@@ -1,0 +1,51 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "GuerillaGenics allowlist"
+paths = [
+    "docs/",
+    ".env.example",
+    "backend/.env.example",
+    "frontend/.env.example",
+    "CHANGELOG.md",
+]
+regexes = [
+    # Allow placeholder values in example files
+    "YOUR_.*_HERE",
+    "REPLACE_WITH_.*",
+    "\\$\\{.*\\}",
+]
+
+[[rules]]
+id = "supabase-service-key"
+description = "Supabase service role key"
+regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'''
+tags = ["supabase", "jwt", "secret"]
+
+[[rules]]
+id = "odds-api-key"
+description = "The Odds API key"
+regex = '''[a-f0-9]{32}'''
+tags = ["odds-api", "api-key"]
+[rules.allowlist]
+paths = [".env.example", "backend/.env.example"]
+
+[[rules]]
+id = "gcp-project-id"
+description = "GCP Project ID in env files"
+regex = '''GCP_PROJECT_ID\s*=\s*[a-z][a-z0-9\-]{5,29}'''
+tags = ["gcp"]
+[rules.allowlist]
+paths = [".env.example", "backend/.env.example", "docs/"]
+
+[[rules]]
+id = "cloudflare-api-token"
+description = "Cloudflare API token"
+regex = '''[A-Za-z0-9_\-]{40}'''
+tags = ["cloudflare"]
+[rules.allowlist]
+paths = [".env.example"]
+
+[allowlist.commits]
+# Add commit SHAs here if needed to skip historical scanning

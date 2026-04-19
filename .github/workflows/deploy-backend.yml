@@ -1,0 +1,71 @@
+name: Deploy Backend → Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+
+jobs:
+  deploy:
+    name: Build + Deploy to Cloud Run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker gcr.io --quiet
+
+      - name: Build and push container
+        run: |
+          gcloud builds submit \
+            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/guerillagenics-backend:${{ github.sha }} \
+            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/guerillagenics-backend:latest \
+            backend/
+        working-directory: .
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy guerillagenics-core-engine \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/guerillagenics-backend:${{ github.sha }} \
+            --region us-west1 \
+            --platform managed \
+            --allow-unauthenticated \
+            --memory 1Gi \
+            --cpu 1 \
+            --concurrency 80 \
+            --timeout 60 \
+            --set-env-vars ENV=production \
+            --set-secrets SUPABASE_URL=SUPABASE_URL:latest \
+            --set-secrets SUPABASE_SERVICE_KEY=SUPABASE_SERVICE_KEY:latest \
+            --set-secrets ODDS_API_KEY=ODDS_API_KEY:latest \
+            --set-secrets OPENWEATHER_API_KEY=OPENWEATHER_API_KEY:latest \
+            --set-secrets SLACK_WEBHOOK=SLACK_WEBHOOK:latest \
+            --set-secrets GG_API_KEYS=GG_API_KEYS:latest
+
+      - name: Smoke test — verify /health returns 200
+        run: |
+          SERVICE_URL=$(gcloud run services describe guerillagenics-core-engine \
+            --region us-west1 --format "value(status.url)")
+          echo "Service URL: $SERVICE_URL"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL/health")
+          echo "Health check status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check FAILED with status $STATUS"
+            exit 1
+          fi
+          echo "Health check PASSED"

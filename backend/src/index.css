@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Bebas Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "DM Mono", ui-monospace, SFMono-Regular, monospace;
+  --animate-spin-slow: spin 3s linear infinite;
+}
+
+@layer base {
+  body {
+    @apply bg-[#050505] text-[#e0e0e0] font-sans antialiased;
+  }
+}
+
+@layer components {
+  .terminal-border {
+    @apply border border-[#1f1f1f];
+  }
+  
+  .terminal-bg {
+    @apply bg-[#0a0a0a];
+  }
+
+  .text-bullish {
+    @apply text-[#00ff41];
+  }
+
+  .text-bearish {
+    @apply text-[#ff3b30];
+  }
+
+  .text-marginal {
+    @apply text-[#ffcc00];
+  }
+
+  .bg-bullish {
+    @apply bg-[#00ff41]/10 text-[#00ff41] border-[#00ff41]/20;
+  }
+
+  .bg-bearish {
+    @apply bg-[#ff3b30]/10 text-[#ff3b30] border-[#ff3b30]/20;
+  }
+
+  .bg-marginal {
+    @apply bg-[#ffcc00]/10 text-[#ffcc00] border-[#ffcc00]/20;
+  }
+}
+
+/* Custom scrollbar for terminal feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1f1f1f;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2f2f2f;
+}

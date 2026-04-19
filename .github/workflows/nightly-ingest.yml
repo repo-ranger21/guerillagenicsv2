@@ -1,0 +1,53 @@
+name: Nightly Data Ingest
+
+on:
+  schedule:
+    - cron: "0 10 * * *"   # 6:00 AM ET (10:00 UTC)
+  workflow_dispatch:
+    inputs:
+      sport:
+        description: "Sport to ingest (all, nba, mlb, nfl)"
+        required: false
+        default: "all"
+
+jobs:
+  ingest:
+    name: Run data ingest pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps
+        working-directory: backend
+
+      - name: Run ingest orchestrator
+        run: |
+          SPORT="${{ github.event.inputs.sport || 'all' }}"
+          python backend/ingest/orchestrator.py --sport "$SPORT"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          ENV: production
+          LOG_LEVEL: INFO
+          MONTE_CARLO_SIMULATIONS: "100000"
+
+      - name: Alert on failure
+        if: failure()
+        run: |
+          curl -X POST "${{ secrets.SLACK_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\": \":rotating_light: GuerillaGenics nightly ingest FAILED\\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
