@@ -1,0 +1,96 @@
+/* GuerillaGenics Design Tokens — matched to Figma Make source */
+
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap");
+
+:root {
+  /* ── Brand ───────────────────────────────────────────────────────── */
+  --gg-green-400: #a3ff6e;
+  --gg-green-500: #84ff47;
+
+  /* ── Backgrounds ─────────────────────────────────────────────────── */
+  --bg-void:    #080808;
+  --bg-surface: #0d0d0d;
+  --bg-raised:  #111111;
+  --bg-overlay: #161616;
+
+  /* ── Borders ─────────────────────────────────────────────────────── */
+  --border-default: #1e1e1e;
+  --border-dim:     #141414;
+  --border-active:  #333333;
+
+  /* ── Text ────────────────────────────────────────────────────────── */
+  --text-primary:   #e8e8e8;
+  --text-secondary: #999999;
+  --text-muted:     #555555;
+  --text-ghost:     #2a2a2a;
+
+  /* ── Signal / Tier ───────────────────────────────────────────────── */
+  --signal-needle: #84ff47;
+  --signal-lock:   #34d399;
+  --signal-lean:   #f59e0b;
+  --signal-watch:  #555555;
+  --signal-fade:   #ef4444;
+
+  /* ── Data ────────────────────────────────────────────────────────── */
+  --data-positive: #84ff47;
+  --data-negative: #ef4444;
+
+  /* ── Font stacks ─────────────────────────────────────────────────── */
+  --font-display: "Bebas Neue", Impact, sans-serif;
+  --font-mono:    "DM Mono", "Fira Code", monospace;
+  --font-sans:    "Inter", system-ui, sans-serif;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background-color: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Label utilities (from Figma Make) ──────────────────────────────── */
+.label-xs {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.label-sm {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.label-md {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-void); }
+::-webkit-scrollbar-thumb { background: var(--border-active); border-radius: 2px; }
+
+/* ── Animations ─────────────────────────────────────────────────────── */
+@keyframes needlePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(132,255,71,0.3); }
+  50%       { box-shadow: 0 0 24px rgba(132,255,71,0.7); }
+}
+
+.animate-needle-pulse { animation: needlePulse 2s ease-in-out infinite; }
+.animate-pulse-glow   { animation: pulseGlow 2s ease-in-out infinite; }
