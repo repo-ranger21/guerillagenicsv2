@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: guerillagenics-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NOTION_TOKEN
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: ODDS_API_KEY
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: GG_API_KEYS
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://guerillagenics.app,https://www.guerillagenics.app
+      - key: RATE_LIMIT_DEFAULT
+        value: 60/minute
+      - key: RATE_LIMIT_EXPENSIVE
+        value: 10/minute
+      - key: ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MONTE_CARLO_SIMULATIONS
+        value: "100000"

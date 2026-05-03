@@ -6,7 +6,6 @@ import os
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential
 from utils.logger import get_logger
-from utils.odds_converter import american_to_implied_prob, remove_vig
 
 logger = get_logger(__name__)
 

@@ -70,7 +70,6 @@ def compute_ssc_batch(
     for t in teams:
         tid = t["team_id"]
         ssc_data = compute_ssc(schedules.get(tid, []), elo_map)
-        raw_vals_list = [ssc_data["ssc_raw"]]
         results.append({**t, **ssc_data})
     raw_vals = [r["ssc_raw"] for r in results]
     mn, mx = min(raw_vals, default=1400), max(raw_vals, default=1620)

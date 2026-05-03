@@ -3,7 +3,9 @@ from formulas.market_inefficiency import compute_mid, classify_tier, NEEDLE_THRE
 
 
 def make_odds_map(odds: int) -> dict:
-    return {"fanduel": [odds, -120], "draftkings": [odds + 10, -115]}
+    # Opponent odds must create total implied > 1.0 (vig > 0).
+    # -450 / -440 pair realistically with a wide range of underdog prices.
+    return {"fanduel": [odds, -450], "draftkings": [odds + 10, -440]}
 
 
 def test_positive_edge_detected():

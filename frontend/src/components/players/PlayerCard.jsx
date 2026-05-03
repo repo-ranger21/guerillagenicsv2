@@ -1,8 +1,7 @@
-import TierBadge from "../shared/TierBadge.jsx";
 import StatBar from "../shared/StatBar.jsx";
 import { formatAmerican, formatImpliedProb, formatEdge } from "../../utils/oddsFormatter.js";
 
-export default function PlayerCard({ player, award }) {
+export default function PlayerCard({ player }) {
   const edgeDir = player.edge_direction?.toUpperCase();
   const edgeColor = edgeDir === "VALUE" ? "text-data-positive" : edgeDir === "FADE" ? "text-data-negative" : "text-text-muted";
 

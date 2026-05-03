@@ -6,7 +6,6 @@ Returns per-team probabilities for each round including championship.
 
 import random
 from collections import defaultdict
-from typing import Any
 
 DEFAULT_SIMULATIONS = 100_000
 HOME_COURT_ELO_ADJ = 65.0
@@ -44,6 +43,10 @@ def simulate_bracket_nba(
     first_round_matchups: [(seed1_team, seed8_team), (seed2, seed7), ...]
     Returns {team_id: {"r1": prob, "r2": prob, "conf_finals": prob, "finals": prob, "champion": prob}}
     """
+    # AUDIT: Win probability is derived solely from elo_map differences (Bernoulli trial
+    # per game). No scoring model exists — expected points are never computed from roster
+    # data. compute_lambdas_from_profiles() (added below) derives roster-based expected-
+    # score lambdas for use in a Double Poisson scoring simulation alongside this bracket.
     round_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     round_names = ["r1", "conf_semis", "conf_finals", "finals", "champion"]
 
@@ -152,3 +155,104 @@ def simulate_bracket_mlb(
         }
         for team in all_teams
     }
+
+
+def compute_lambdas_from_profiles(
+    home_team: str,
+    away_team: str,
+    team_profiles: dict,
+    sport: str,
+    league_avg: float,
+) -> tuple[float, float]:
+    """
+    Derives expected scoring lambdas for home and away teams from roster profiles.
+
+    Translates player-aggregate stat profiles into expected output (points/runs/score)
+    for use in a Double Poisson or Poisson scoring simulation. Each team's lambda is
+    the league average scaled by offensive strength and opponent defensive resistance.
+
+    Formulas by sport:
+        NFL:  lambda = league_avg × (off_efficiency / league_mean_off)
+                                   × (league_mean_def / opp_def_efficiency)
+        NBA:  lambda = league_avg × (off_rating / league_mean_off)
+                                   × (league_mean_def / opp_def_rating)
+        MLB:  lambda = league_avg × (lineup_ops / league_mean_ops)
+                                   × (league_mean_era / opp_rotation_era)
+
+    Fallback: if either team is missing from team_profiles, or a required metric is
+    unavailable, returns (league_avg, league_avg).
+
+    Args:
+        home_team:     team name matching a key in team_profiles
+        away_team:     team name matching a key in team_profiles
+        team_profiles: {team_name: dict} from roster_aggregator.aggregate_*_teams()
+        sport:         'nfl', 'nba', or 'mlb'
+        league_avg:    baseline expected output per team per game
+                       (e.g. 23.5 for NFL points, 110 for NBA points, 4.5 for MLB runs)
+
+    Returns:
+        (lambda_home, lambda_away) — both positive floats, minimum 0.1
+    """
+    home_p = team_profiles.get(home_team)
+    away_p = team_profiles.get(away_team)
+
+    if not home_p or not away_p:
+        return (league_avg, league_avg)
+
+    sport = sport.lower()
+    all_profiles = list(team_profiles.values())
+
+    def _mean(key: str) -> float:
+        vals = [p.get(key) for p in all_profiles if p.get(key) is not None]
+        return sum(vals) / len(vals) if vals else league_avg
+
+    def _get(profile: dict, key: str, fallback: float) -> float:
+        v = profile.get(key)
+        return float(v) if v is not None else fallback
+
+    if sport == "nfl":
+        lg_off = _mean("off_efficiency")
+        lg_def = _mean("def_efficiency")
+        if lg_off <= 0 or lg_def <= 0:
+            return (league_avg, league_avg)
+        h_off = _get(home_p, "off_efficiency", lg_off)
+        a_off = _get(away_p, "off_efficiency", lg_off)
+        h_def = _get(home_p, "def_efficiency", lg_def)
+        a_def = _get(away_p, "def_efficiency", lg_def)
+        if a_def <= 0 or h_def <= 0:
+            return (league_avg, league_avg)
+        lam_home = league_avg * (h_off / lg_off) * (lg_def / a_def)
+        lam_away = league_avg * (a_off / lg_off) * (lg_def / h_def)
+
+    elif sport == "nba":
+        lg_off = _mean("off_rating")
+        lg_def = _mean("def_rating")
+        if lg_off <= 0 or lg_def <= 0:
+            return (league_avg, league_avg)
+        h_off = _get(home_p, "off_rating", lg_off)
+        a_off = _get(away_p, "off_rating", lg_off)
+        h_def = _get(home_p, "def_rating", lg_def)
+        a_def = _get(away_p, "def_rating", lg_def)
+        if a_def <= 0 or h_def <= 0:
+            return (league_avg, league_avg)
+        lam_home = league_avg * (h_off / lg_off) * (lg_def / a_def)
+        lam_away = league_avg * (a_off / lg_off) * (lg_def / h_def)
+
+    elif sport == "mlb":
+        lg_ops = _mean("lineup_ops")
+        lg_era = _mean("rotation_era")
+        if lg_ops <= 0 or lg_era <= 0:
+            return (league_avg, league_avg)
+        h_ops = _get(home_p, "lineup_ops", lg_ops)
+        a_ops = _get(away_p, "lineup_ops", lg_ops)
+        h_era = _get(home_p, "rotation_era", lg_era)
+        a_era = _get(away_p, "rotation_era", lg_era)
+        if a_era <= 0 or h_era <= 0:
+            return (league_avg, league_avg)
+        lam_home = league_avg * (h_ops / lg_ops) * (lg_era / a_era)
+        lam_away = league_avg * (a_ops / lg_ops) * (lg_era / h_era)
+
+    else:
+        return (league_avg, league_avg)
+
+    return (round(max(lam_home, 0.1), 4), round(max(lam_away, 0.1), 4))

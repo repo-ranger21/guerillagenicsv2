@@ -41,7 +41,6 @@ def compute_nba_championship_probs(
                     "model_prob": champ_prob, "signals": {}, "triggered_signals": []}
         kelly_data = {"full_kelly": 0.0, "quarter_kelly": 0.0}
         best_odds = -10000
-        best_book = "none"
 
         if odds_map and team.get("abbreviation") in odds_map:
             book_odds = odds_map[team["abbreviation"]]

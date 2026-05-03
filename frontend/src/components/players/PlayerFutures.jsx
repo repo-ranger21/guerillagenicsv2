@@ -1,6 +1,5 @@
 import { useParams } from "react-router-dom";
 import { usePlayerFutures } from "../../hooks/usePlayerFutures.js";
-import PlayerCard from "./PlayerCard.jsx";
 import AwardCandidateRow from "./AwardCandidateRow.jsx";
 import LoadingState from "../shared/LoadingState.jsx";
 import ErrorState from "../shared/ErrorState.jsx";

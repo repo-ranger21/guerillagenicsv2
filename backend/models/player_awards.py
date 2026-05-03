@@ -4,7 +4,7 @@ Scores candidates using weighted per-game/season stats and narrative factors.
 """
 
 from utils.normalizer import normalize_0_100
-from utils.odds_converter import american_to_implied_prob, remove_vig_from_odds
+from utils.odds_converter import american_to_implied_prob
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

@@ -3,7 +3,7 @@ import StatDisplay from "../shared/StatDisplay.jsx";
 
 export default function NeedleAlert({ data, onAnalyze }) {
   if (!data) return null;
-  const { team, modelPercent, marketPercent, edge, signals = [], eaaPoints = [] } = data;
+  const { team, modelPercent, marketPercent, signals = [], eaaPoints = [] } = data;
 
   return (
     <div

@@ -10,7 +10,6 @@ from formulas.market_inefficiency import compute_mid
 from formulas.kelly_criterion import kelly_from_american
 from db.queries.needle_alerts import create_needle_alert
 from db.queries.model_snapshots import save_snapshot
-from utils.odds_converter import american_to_implied_prob
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -21,7 +20,6 @@ NEEDLE_EDGE_THRESHOLD = 0.05
 def run_mlb_pipeline() -> dict:
     logger.info("mlb_pipeline_start")
 
-    standings = fetch_standings(season=2025, league_id=103)
     al_standings = fetch_standings(season=2025, league_id=103)
     nl_standings = fetch_standings(season=2025, league_id=104)
     all_standings = al_standings + nl_standings

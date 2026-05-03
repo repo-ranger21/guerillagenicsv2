@@ -2,24 +2,21 @@
 NBA ingest pipeline — runs all NBA data collection and score computation.
 """
 
-from scrapers.nba_stats import fetch_team_advanced_stats, fetch_team_base_stats, fetch_team_clutch_stats
-from scrapers.espn import fetch_standings, fetch_injuries
+from scrapers.nba_stats import fetch_team_advanced_stats, fetch_team_base_stats
+from scrapers.espn import fetch_standings
 from scrapers.odds_api import fetch_championship_odds, build_team_odds_map
 from scrapers.injuries import get_active_injuries
-from formulas.gg_elo import compute_gg_elo_from_games, normalize_elo_to_score, EloState
+from formulas.gg_elo import normalize_elo_to_score
 from formulas.net_impact_rating import compute_nir_batch
 from formulas.injury_impact import compute_iis_batch
 from formulas.momentum_decay import compute_mdi_batch
 from formulas.composite_futures import rank_teams
 from formulas.market_inefficiency import compute_mid
 from formulas.kelly_criterion import kelly_from_american
-from db.queries.teams import get_all_teams
-from db.queries.odds_history import insert_odds_batch
-from db.queries.needle_alerts import create_needle_alert, deactivate_needles_for_team
+from db.queries.needle_alerts import create_needle_alert
 from db.queries.model_snapshots import save_snapshot
 from utils.odds_converter import american_to_implied_prob
 from utils.logger import get_logger
-from datetime import datetime
 
 logger = get_logger(__name__)
 SEASON = "2024-25"
@@ -36,7 +33,6 @@ def run_nba_pipeline() -> dict:
     championship_odds = fetch_championship_odds("nba")
     odds_map = build_team_odds_map(championship_odds)
 
-    espn_id_map = {t["espn_id"]: t for t in standings}
     adv_map = {row.get("TEAM_ID"): row for row in advanced}
     base_map = {row.get("TEAM_ID"): row for row in base_per100}
 
@@ -49,7 +45,6 @@ def run_nba_pipeline() -> dict:
         nir_pace = float(adv.get("PACE", 100) or 100)
         pts_per100 = float(base.get("PTS", 110) or 110)
         opp_per100 = float(base.get("OPP_PTS", 110) or 110)
-        net_rtg = float(adv.get("NET_RATING", 0) or 0)
 
         inj_list = injuries_by_team.get(eid, [])
         wins = standing.get("wins", 0)

@@ -1,5 +1,4 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { formatRelative } from "../../utils/dateHelpers.js";
 import { formatAmerican } from "../../utils/oddsFormatter.js";
 
 function CustomTooltip({ active, payload, label }) {

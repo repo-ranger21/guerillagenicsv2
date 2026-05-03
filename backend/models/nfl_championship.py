@@ -16,7 +16,6 @@ def compute_nfl_championship_probs(teams: list[dict], odds_map: dict | None = No
 
     results = []
     for team in ranked:
-        tid = team["team_id"]
         champ_prob = round(team["cfs_score"] / total_cfs, 4) if total_cfs else 0.0
 
         mid_data = {"mid_edge": 0.0, "tier": "FAIR", "market_prob": champ_prob, "triggered_signals": []}

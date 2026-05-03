@@ -4,7 +4,7 @@ import WatchlistItem from "./WatchlistItem.jsx";
 const SPORT_ORDER = ["nba", "mlb", "nfl"];
 
 export default function Watchlist() {
-  const { items, toggleTeam, togglePlayer, clearAll, removeItem } = useWatchlist();
+  const { items, clearAll, removeItem } = useWatchlist();
 
   const grouped = SPORT_ORDER.reduce((acc, sport) => {
     const sportItems = items.filter((i) => i.sport === sport);

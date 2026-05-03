@@ -35,11 +35,15 @@ venv.bak/
 
 # Environment files — NEVER commit these
 .env
+.env.*
 .env.local
+.env.development
+.env.test
 .env.production
 .env.staging
 backend/.env
 frontend/.env
+frontend/.env.*
 
 # pytest
 .pytest_cache/
@@ -74,6 +78,8 @@ pnpm-debug.log*
 frontend/dist/
 frontend/.vite/
 *.local
+data/raw/
+*.zip
 
 # IDE
 .vscode/
@@ -120,3 +126,8 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 .cache/
+workspace_tree_*.txt
+requirements_current.txt
+
+# Claude Code local state
+.claude/

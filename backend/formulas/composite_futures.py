@@ -55,6 +55,11 @@ def compute_cfs(
     mid_edge: float,
     weights: dict[str, float] | None = None,
 ) -> dict:
+    # AUDIT: All 8 sub-scores are passed in pre-computed — this function is a pure
+    # weighted aggregator. In active pipelines, NFL/MLB derive all scores from standings
+    # win% and point_diff (no player-level Notion data). NBA uses scraped per-100 stats
+    # for nir_score only. Roster profiles from roster_aggregator.py feed in via
+    # apply_roster_adjustment() adjusting gg_elo upstream before it reaches here.
     if weights is None:
         weights = _load_weights()
 

@@ -1,5 +1,4 @@
 import TierBadge from "../shared/TierBadge.jsx";
-import { formatAmerican, formatImpliedProb } from "../../utils/oddsFormatter.js";
 
 export default function WatchlistItem({ item, onRemove }) {
   const isTeam = item.type === "team";

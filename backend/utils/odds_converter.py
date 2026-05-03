@@ -39,3 +39,20 @@ def best_american_odds(odds_list: list[int]) -> int:
 def vig_percentage(odds_list: list[int]) -> float:
     total = sum(american_to_implied_prob(o) for o in odds_list)
     return round((total - 1.0) * 100, 4)
+
+
+def remove_vig_futures(odds_dict: dict[str, int]) -> tuple[dict[str, float], float]:
+    """
+    Multiplicative vig removal for a full Futures board (e.g., all 32 NFL teams).
+    Sportsbooks inflate Futures vig to 15-25%, so stripping it before edge
+    calculation is critical — raw implied probs will systematically understate edge.
+
+    Returns (fair_probs_dict, vig_pct_float).
+    """
+    raw = {team: american_to_implied_prob(odds) for team, odds in odds_dict.items()}
+    total = sum(raw.values())
+    if total == 0:
+        return {team: 0.0 for team in odds_dict}, 0.0
+    fair = {team: round(prob / total, 6) for team, prob in raw.items()}
+    vig_pct = round((total - 1.0) / total * 100, 4)
+    return fair, vig_pct

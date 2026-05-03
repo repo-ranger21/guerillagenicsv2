@@ -4,8 +4,7 @@ Compares GuerillaGenics model probability to vig-removed market odds.
 Fires the NEEDLE alert when 6 specific market inefficiency signals align.
 """
 
-from utils.odds_converter import remove_vig_from_odds
-from utils.normalizer import clamp
+from utils.odds_converter import remove_vig_from_odds, remove_vig_futures
 
 NEEDLE_THRESHOLD = 0.07
 LOCK_THRESHOLD = 0.05
@@ -29,6 +28,58 @@ def compute_vig_removed_prob(odds_by_book: dict[str, list[int]], market_idx: int
             if market_idx < len(removed):
                 all_removed.append(removed[market_idx])
     return round(sum(all_removed) / len(all_removed), 6) if all_removed else 0.0
+
+
+def compute_futures_market_prob(
+    odds_by_book: dict[str, dict[str, int]],
+) -> dict[str, float]:
+    """
+    Computes consensus fair probabilities for a full Futures board across bookmakers.
+
+    odds_by_book: {bookmaker: {team: american_odds}}
+    Returns {team: averaged_fair_prob} — vig stripped per book before averaging
+    so no single book's vig structure distorts the consensus line.
+    """
+    team_prob_sums: dict[str, float] = {}
+    book_count = 0
+    for _book, team_odds in odds_by_book.items():
+        if not team_odds:
+            continue
+        fair_probs, _ = remove_vig_futures(team_odds)
+        for team, prob in fair_probs.items():
+            team_prob_sums[team] = team_prob_sums.get(team, 0.0) + prob
+        book_count += 1
+    if book_count == 0:
+        return {}
+    return {team: round(total / book_count, 6) for team, total in team_prob_sums.items()}
+
+
+def compute_futures_team_prob(team: str, books_odds: dict[str, int]) -> float:
+    """
+    Consensus fair probability for a single Futures team across multiple bookmakers.
+
+    books_odds: {bookmaker_name: american_odds} for this one team.
+
+    For each bookmaker, builds a synthetic two-team board — the named team at their
+    listed odds plus a catch-all "__field__" at -110 — then strips vig multiplicatively.
+    Averaging the per-book fair probabilities before returning ensures no single
+    book's margin distorts the consensus probability.
+
+    Args:
+        team:       team name used as the key in the synthetic board
+        books_odds: {bookmaker: american_odds} for the named team
+
+    Returns:
+        Averaged fair probability in [0.0, 1.0]. Returns 0.0 if no valid odds provided.
+    """
+    probs = []
+    for _book, odds in books_odds.items():
+        fair, _ = remove_vig_futures({team: odds, "__field__": -110})
+        if team in fair:
+            probs.append(fair[team])
+    if not probs:
+        return 0.0
+    return round(sum(probs) / len(probs), 6)
 
 
 def classify_tier(edge: float) -> str:
@@ -71,7 +122,7 @@ def score_signals(signals: dict[str, bool]) -> float:
 
 def compute_mid(
     model_prob: float,
-    market_odds_by_book: dict[str, list[int]],
+    market_odds_by_book: dict,
     market_idx: int = 0,
     opening_odds: int | None = None,
     current_best_odds: int | None = None,
@@ -79,8 +130,17 @@ def compute_mid(
     sharp_money_on_team: bool = False,
     injury_recently_cleared: bool = False,
     late_season: bool = False,
+    is_futures: bool = False,
+    futures_team: str | None = None,
 ) -> dict:
-    market_prob = compute_vig_removed_prob(market_odds_by_book, market_idx)
+    # AUDIT: Without is_futures=True, routes exclusively through compute_vig_removed_prob()
+    # — a two-outcome game odds model (dict[str, list[int]]). Futures boards (N teams,
+    # single odds per book) need is_futures=True which calls compute_futures_team_prob()
+    # instead. The futures path is wired below.
+    if is_futures and futures_team is not None:
+        market_prob = compute_futures_team_prob(futures_team, market_odds_by_book)
+    else:
+        market_prob = compute_vig_removed_prob(market_odds_by_book, market_idx)
     if market_prob <= 0:
         return {
             "mid_edge": 0.0,

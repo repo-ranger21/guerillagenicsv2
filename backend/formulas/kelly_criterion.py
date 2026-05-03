@@ -40,3 +40,36 @@ def recommended_unit_size(
     raw = bankroll * quarter_kelly
     capped = min(raw, bankroll * max_pct)
     return round(capped, 2)
+
+
+def futures_ev_annualized(
+    model_prob: float,
+    american_odds: int,
+    days_to_resolution: int,
+) -> dict:
+    """
+    Extends raw EV with an annualized growth rate so Futures bets of different
+    durations can be ranked on equal footing. A +18% EV Super Bowl bet in 5 months
+    may beat a +22% EV division bet in 3 months — this surfaces that comparison.
+
+    Assumes flat Kelly sizing (simplified). Use alongside kelly_from_american for
+    full sizing context.
+    """
+    dec = american_to_decimal(american_odds)
+    raw_ev = (model_prob * (dec - 1)) - (1 - model_prob)
+    if raw_ev <= -1.0:
+        return {
+            "raw_ev_pct": round(raw_ev * 100, 2),
+            "annualized_ev_pct": None,
+            "days_to_resolution": days_to_resolution,
+            "is_positive_ev": False,
+            "error": "Raw EV at or below -100% — annualized growth undefined",
+        }
+    years = max(days_to_resolution, 1) / 365
+    annualized_growth = (1 + raw_ev) ** (1 / years) - 1
+    return {
+        "raw_ev_pct": round(raw_ev * 100, 2),
+        "annualized_ev_pct": round(annualized_growth * 100, 2),
+        "days_to_resolution": days_to_resolution,
+        "is_positive_ev": raw_ev > 0,
+    }
