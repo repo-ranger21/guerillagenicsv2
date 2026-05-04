@@ -11,7 +11,7 @@
 // STEP 2: Add env variables to frontend/.env.local
 // ============================================================
 //
-//   VITE_SUPABASE_URL=https://vegrvcivankfreqkzwmr.supabase.co
+//   VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 //   VITE_SUPABASE_ANON_KEY=your_anon_key_from_supabase_dashboard
 //
 // ============================================================
@@ -107,7 +107,7 @@
 // ============================================================
 //
 // Install Supabase CLI, then:
-//   supabase gen types typescript --project-id vegrvcivankfreqkzwmr \
+//   supabase gen types typescript --project-id YOUR_PROJECT_REF \
 //     --schema public > frontend/src/types/database.ts
 //
 // Run this after every schema migration to keep types in sync.

@@ -4,7 +4,6 @@ NBA ingest pipeline — runs all NBA data collection and score computation.
 
 from scrapers.nba_stats import fetch_team_advanced_stats, fetch_team_base_stats
 from scrapers.espn import fetch_standings
-from scrapers.odds_api import fetch_championship_odds, build_team_odds_map
 from scrapers.injuries import get_active_injuries
 from formulas.gg_elo import normalize_elo_to_score
 from formulas.net_impact_rating import compute_nir_batch
@@ -30,8 +29,7 @@ def run_nba_pipeline() -> dict:
     base_per100 = fetch_team_base_stats(SEASON)
     standings = fetch_standings("nba")
     injuries_by_team = get_active_injuries("nba")
-    championship_odds = fetch_championship_odds("nba")
-    odds_map = build_team_odds_map(championship_odds)
+    odds_map = {}
 
     adv_map = {row.get("TEAM_ID"): row for row in advanced}
     base_map = {row.get("TEAM_ID"): row for row in base_per100}

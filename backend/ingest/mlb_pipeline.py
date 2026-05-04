@@ -3,7 +3,6 @@ MLB ingest pipeline.
 """
 
 from scrapers.mlb_stats import fetch_standings
-from scrapers.odds_api import fetch_championship_odds, build_team_odds_map
 from scrapers.injuries import get_active_injuries
 from formulas.composite_futures import rank_teams
 from formulas.market_inefficiency import compute_mid
@@ -25,8 +24,7 @@ def run_mlb_pipeline() -> dict:
     all_standings = al_standings + nl_standings
 
     injuries_by_team = get_active_injuries("mlb")
-    championship_odds = fetch_championship_odds("mlb")
-    odds_map = build_team_odds_map(championship_odds)
+    odds_map = {}
 
     teams_input = []
     for team in all_standings:

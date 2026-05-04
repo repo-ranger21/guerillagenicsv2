@@ -3,7 +3,6 @@ NFL ingest pipeline.
 """
 
 from scrapers.nfl_espn import fetch_nfl_standings
-from scrapers.odds_api import fetch_championship_odds, build_team_odds_map
 from scrapers.injuries import get_active_injuries
 from formulas.composite_futures import rank_teams
 from formulas.market_inefficiency import compute_mid
@@ -22,8 +21,7 @@ def run_nfl_pipeline() -> dict:
 
     standings = fetch_nfl_standings(season=2025)
     injuries_by_team = get_active_injuries("nfl")
-    championship_odds = fetch_championship_odds("nfl")
-    odds_map = build_team_odds_map(championship_odds)
+    odds_map = {}
 
     teams_input = []
     for team in standings:

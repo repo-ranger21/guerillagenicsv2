@@ -1,6 +1,6 @@
 // ============================================================
 // GuerillaGenics v2 — Supabase Database Types
-// Auto-sync with: supabase gen types typescript --project-id vegrvcivankfreqkzwmr > src/types/database.ts
+// Auto-sync with: supabase gen types typescript --project-id YOUR_PROJECT_REF > src/types/database.ts
 // ============================================================
 
 export type SubscriptionTier = 'scout' | 'operative' | 'command'
