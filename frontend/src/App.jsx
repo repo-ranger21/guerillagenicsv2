@@ -1,5 +1,12 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { removeVigMultiplicative, futuresEvAnnualized } from "./utils/bettingMath";
+import { useAuth } from './lib/AuthContext';
+import { AuthModal } from './components/auth/AuthModal';
+import { TierGate } from './components/auth/TierGate';
+import { useNeedleAlerts } from './hooks/useNeedleAlerts';
+import { useFuturesEdge } from './hooks/useFuturesEdge';
+import { useWatchlist } from './hooks/useWatchlist';
+import { formatAmerican } from './utils/oddsFormatter';
 
 /* ═══════════════════════════════════════════════════════════════
    FONT INJECTION
@@ -2486,12 +2493,401 @@ const PageEdgeCalc = () => {
 };
 
 /* ═══════════════════════════════════════════════════════════════
+   PAGE: NEEDLE ALERTS
+═══════════════════════════════════════════════════════════════ */
+const SEVERITY_COLORS = {
+  info:    C.blue,
+  sharp:   C.green,
+  steam:   C.amber,
+  reverse: C.red,
+};
+
+const NeedleDetail = ({ alert }) => {
+  if (!alert) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: 60, textAlign: "center" }}>
+        <div style={{ fontFamily: C.mono, fontSize: 10, color: C.ghost, letterSpacing: 2, textTransform: "uppercase" }}>Select an alert from the feed</div>
+      </div>
+    );
+  }
+  const sc = SEVERITY_COLORS[alert.severity] ?? C.ghost;
+  const sportSc = sportColor(alert.sport ?? "");
+  const firedAt = alert.fired_at ? new Date(alert.fired_at).toLocaleString() : "—";
+  const expiresAt = alert.expires_at ? new Date(alert.expires_at).toLocaleString() : "—";
+  return (
+    <div style={{ padding: "28px 32px 64px", overflowY: "auto" }}>
+      {/* Header — visible all tiers */}
+      <div style={{ marginBottom: 22, paddingBottom: 22, borderBottom: `3px double ${C.rule}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <span style={{ fontFamily: C.mono, fontSize: 7, letterSpacing: 1.5, padding: "2px 8px", border: `1px solid ${sc}40`, color: sc, background: `${sc}10`, textTransform: "uppercase", borderRadius: 1 }}>
+            {alert.severity}
+          </span>
+          {alert.sport && (
+            <span style={{ fontFamily: C.display, fontSize: 12, letterSpacing: 2, color: sportSc, padding: "1px 6px", background: `${sportSc}15`, border: `1px solid ${sportSc}40` }}>
+              {alert.sport}
+            </span>
+          )}
+          {alert.market_type && (
+            <span style={{ fontFamily: C.mono, fontSize: 8, letterSpacing: 2, color: C.ghost, textTransform: "uppercase" }}>
+              {alert.market_type}
+            </span>
+          )}
+        </div>
+        <h2 style={{ fontFamily: C.serif, fontSize: "clamp(20px,2.5vw,28px)", color: C.ink, marginBottom: 8, lineHeight: 1.15 }}>
+          {alert.title}
+        </h2>
+        {alert.market_label && (
+          <div style={{ fontFamily: C.mono, fontSize: 10, color: C.ghost, letterSpacing: 0.5 }}>{alert.market_label}</div>
+        )}
+      </div>
+
+      {/* Body text — visible all tiers */}
+      {alert.body && (
+        <div style={{ background: C.paper2, border: `1px solid ${C.rule}`, padding: "14px 18px", marginBottom: 22, fontFamily: C.mono, fontSize: 10, color: C.ink, lineHeight: 1.85, letterSpacing: 0.3 }}>
+          {alert.body}
+        </div>
+      )}
+
+      {/* Meta strip — visible all tiers */}
+      <div style={{ display: "flex", background: C.paper2, borderTop: `2px solid ${C.rule}`, borderBottom: `2px solid ${C.rule}`, marginBottom: 22, flexWrap: "wrap" }}>
+        {[
+          { l: "Severity",  v: (alert.severity ?? "—").toUpperCase(), c: sc },
+          { l: "Sport",     v: alert.sport ?? "—",                     c: C.ink },
+          { l: "Fired",     v: firedAt,                                c: C.ghost },
+          { l: "Expires",   v: expiresAt,                              c: C.ghost },
+          { l: "Min Tier",  v: (alert.min_tier ?? "scout").toUpperCase(), c: C.amber },
+        ].map((m, i) => (
+          <div key={i} style={{ flex: 1, minWidth: "18%", padding: "11px 10px", borderRight: i < 4 ? `1px solid ${C.rule}` : "none", textAlign: "center" }}>
+            <div style={{ fontFamily: C.mono, fontSize: 7.5, letterSpacing: 2, color: C.ghost, textTransform: "uppercase", marginBottom: 5 }}>{m.l}</div>
+            <div style={{ fontFamily: C.display, fontSize: 17, letterSpacing: 1, color: m.c }}>{m.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Operative-gated detail: edge_bps + model payload */}
+      <TierGate required="operative">
+        <div>
+          {alert.edge_bps != null && (
+            <div style={{ border: `1px solid ${C.rule}`, background: C.cream, marginBottom: 16, overflow: "hidden" }}>
+              <div style={{ background: C.ink, padding: "9px 14px", fontFamily: C.mono, fontSize: 8, letterSpacing: 2, color: "rgba(255,255,255,.4)", textTransform: "uppercase" }}>
+                Edge Signal
+              </div>
+              <div style={{ padding: 14 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+                  <div style={{ fontFamily: C.display, fontSize: 42, letterSpacing: 2, lineHeight: 1, color: alert.edge_bps > 0 ? C.green : C.red }}>
+                    {alert.edge_bps > 0 ? "+" : ""}{alert.edge_bps}
+                  </div>
+                  <div style={{ fontFamily: C.mono, fontSize: 9, color: C.ghost, letterSpacing: 1 }}>basis points</div>
+                </div>
+                <div style={{ height: 5, background: C.ruleLt, borderRadius: 3 }}>
+                  <div style={{ height: 5, width: `${Math.min(Math.abs(alert.edge_bps) / 5, 100)}%`, background: alert.edge_bps > 0 ? C.green : C.red, borderRadius: 3, transition: "width .9s cubic-bezier(.4,0,.2,1)" }} />
+                </div>
+              </div>
+            </div>
+          )}
+          {alert.payload && (
+            <div style={{ border: `1px solid ${C.rule}`, background: C.cream, overflow: "hidden" }}>
+              <div style={{ background: C.ink, padding: "9px 14px", fontFamily: C.mono, fontSize: 8, letterSpacing: 2, color: "rgba(255,255,255,.4)", textTransform: "uppercase" }}>
+                Model Payload
+              </div>
+              <div style={{ padding: 14 }}>
+                <pre style={{ fontFamily: C.mono, fontSize: 9, color: C.ink, lineHeight: 1.8, whiteSpace: "pre-wrap", wordBreak: "break-all", margin: 0 }}>
+                  {typeof alert.payload === "object" ? JSON.stringify(alert.payload, null, 2) : String(alert.payload)}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      </TierGate>
+    </div>
+  );
+};
+
+const PageNeedles = ({ alerts, loading, error, user, isOperative }) => {
+  const [selId, setSelId] = useState(null);
+  const sel = alerts.find((a) => a.id === selId) ?? null;
+
+  return (
+    <div style={{ background: C.paper }}>
+      {/* Section header with live indicator */}
+      <div style={{ background: C.paper2, padding: "16px 40px", borderBottom: `2px solid ${C.rule}`, display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ fontFamily: C.display, fontSize: 26, letterSpacing: 3, color: C.ink }}>NEEDLE ALERTS</div>
+          {user && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.green, animation: "pulse 2s infinite" }} />
+              <span style={{ fontFamily: C.mono, fontSize: 8, letterSpacing: 2, color: C.green, textTransform: "uppercase" }}>
+                {isOperative ? "LIVE" : "24H DELAY"}
+              </span>
+            </div>
+          )}
+        </div>
+        <div style={{ fontFamily: C.mono, fontSize: 9, letterSpacing: 1.5, color: C.ghost, textTransform: "uppercase" }}>
+          Sharp steam · Reverse LM · Model flags
+        </div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", minHeight: "calc(100vh - 136px)" }}>
+        {/* Alert list — all tiers see this */}
+        <div style={{ borderRight: `2px solid ${C.rule}`, background: C.paper2, overflowY: "auto", maxHeight: "calc(100vh - 190px)", position: "sticky", top: 190 }}>
+          {loading && (
+            <div style={{ padding: 28, fontFamily: C.mono, fontSize: 9, color: C.ghost, letterSpacing: 2, textTransform: "uppercase", textAlign: "center" }}>
+              Loading alerts…
+            </div>
+          )}
+          {error && (
+            <div style={{ margin: 14, padding: "10px 14px", fontFamily: C.mono, fontSize: 9, color: C.red, background: C.redLt, border: `1px solid ${C.redBd}` }}>
+              {error}
+            </div>
+          )}
+          {!loading && !error && alerts.length === 0 && !user && (
+            <div style={{ padding: 32, fontFamily: C.mono, fontSize: 9, color: C.ghost, letterSpacing: 1.5, textAlign: "center", lineHeight: 2, textTransform: "uppercase" }}>
+              Sign in to see live alerts
+            </div>
+          )}
+          {!loading && !error && alerts.length === 0 && user && (
+            <div style={{ padding: 32, fontFamily: C.mono, fontSize: 9, color: C.ghost, letterSpacing: 1.5, textAlign: "center", lineHeight: 2, textTransform: "uppercase" }}>
+              No active alerts — check back soon.
+            </div>
+          )}
+          {alerts.map((a) => {
+            const sc = SEVERITY_COLORS[a.severity] ?? C.ghost;
+            const sportSc = sportColor(a.sport ?? "");
+            const firedAt = a.fired_at ? new Date(a.fired_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+            return (
+              <div
+                key={a.id}
+                onClick={() => setSelId(a.id)}
+                style={{ padding: "16px 18px", borderBottom: `1px solid ${C.ruleLt}`, cursor: "pointer", transition: "background .15s", borderLeft: `3px solid ${selId === a.id ? sc : "transparent"}`, background: selId === a.id ? C.cream : "transparent" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = C.cream)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = selId === a.id ? C.cream : "transparent")}
+              >
+                <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 5, flexWrap: "wrap" }}>
+                  <span style={{ fontFamily: C.mono, fontSize: 7, letterSpacing: 1.5, padding: "2px 6px", border: `1px solid ${sc}40`, color: sc, background: `${sc}10`, textTransform: "uppercase", borderRadius: 1 }}>
+                    {a.severity}
+                  </span>
+                  {a.sport && (
+                    <span style={{ fontFamily: C.display, fontSize: 11, letterSpacing: 2, color: sportSc, padding: "1px 5px", background: `${sportSc}15`, border: `1px solid ${sportSc}40` }}>
+                      {a.sport}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontFamily: C.mono, fontSize: 11, fontWeight: 700, color: C.ink, marginBottom: 4, lineHeight: 1.3 }}>
+                  {a.market_label ?? a.title}
+                </div>
+                <div style={{ fontFamily: C.mono, fontSize: 9, color: C.ghost, letterSpacing: 0.5 }}>{firedAt}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Alert detail panel */}
+        <NeedleDetail alert={sel} />
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE: FUTURES EDGE BOARD
+═══════════════════════════════════════════════════════════════ */
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
+  return `${Math.floor(secs / 86400)}d ago`;
+}
+
+const EDGE_SPORT_OPTIONS = ['ALL', 'NFL', 'NBA', 'MLB'];
+
+const FUTURES_TEASER_ROWS = [
+  { sport: 'NFL', market_label: 'Super Bowl Champion — Kansas City Chiefs', best_price: +450 },
+  { sport: 'NBA', market_label: 'NBA Champion — Oklahoma City Thunder', best_price: +310 },
+  { sport: 'MLB', market_label: 'World Series Champion — Los Angeles Dodgers', best_price: +380 },
+];
+
+const FuturesScoutTeaser = () => (
+  <div>
+    <div style={{ border: `1px solid ${C.rule}`, overflow: 'hidden' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: C.mono, fontSize: 10 }}>
+        <thead>
+          <tr>
+            {['Sport', 'Market / Team', 'Best Price'].map((h) => (
+              <th key={h} style={{ fontFamily: C.mono, fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', color: C.ghost, textAlign: 'left', padding: '9px 12px', borderBottom: `2px solid ${C.ink}`, background: C.paper2 }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {FUTURES_TEASER_ROWS.map((row, i) => {
+            const sc = sportColor(row.sport);
+            return (
+              <tr key={i} style={{ borderBottom: `1px solid ${C.ruleLt}`, filter: i > 0 ? 'blur(5px)' : 'none', userSelect: 'none', background: i % 2 === 0 ? C.cream : C.paper }}>
+                <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontFamily: C.display, fontSize: 12, letterSpacing: 2, color: sc, padding: '1px 6px', background: `${sc}15`, border: `1px solid ${sc}40` }}>{row.sport}</span>
+                </td>
+                <td style={{ padding: '12px', color: C.ink, fontWeight: 700 }}>{row.market_label}</td>
+                <td style={{ padding: '12px', fontFamily: C.display, fontSize: 20, color: row.best_price > 0 ? C.green : C.amber }}>{formatAmerican(row.best_price)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+    <div style={{ textAlign: 'center', padding: '32px 0 0' }}>
+      <div style={{ fontFamily: C.mono, fontSize: 9, letterSpacing: 3, color: C.green, textTransform: 'uppercase', marginBottom: 12 }}>Operative Feature</div>
+      <div style={{ fontFamily: C.serif, fontSize: 20, color: C.ink, marginBottom: 10 }}>Act on what the market doesn't yet.</div>
+      <div style={{ fontFamily: C.mono, fontSize: 10, color: C.ghost, lineHeight: 1.7, maxWidth: 420, margin: '0 auto 20px' }}>
+        The full edge leaderboard — edge_bps, fair price, model confidence, and real-time watchlist — is an Operative feature.
+      </div>
+      <button
+        onClick={() => window.location.href = '/pricing'}
+        style={{ fontFamily: C.mono, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: C.ink, background: C.green, border: 'none', padding: '12px 28px', cursor: 'pointer', borderRadius: 2 }}
+      >
+        Upgrade to Operative — $79/mo
+      </button>
+    </div>
+  </div>
+);
+
+const PageFutures = ({ futures, loading, error, tieredOut, refetch, isWatched, addToWatchlist, removeFromWatchlist, capReached, edgeSport, setEdgeSport }) => {
+  const freshAt = futures.length > 0 ? futures[0].updated_at : null;
+  const sportCounts = EDGE_SPORT_OPTIONS.slice(1).reduce((acc, s) => {
+    acc[s] = futures.filter((f) => f.sport === s).length;
+    return acc;
+  }, {});
+
+  return (
+    <div style={{ background: C.paper }}>
+      <div style={{ background: C.paper2, padding: '16px 40px', borderBottom: `2px solid ${C.rule}`, display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ fontFamily: C.display, fontSize: 26, letterSpacing: 3, color: C.ink }}>FUTURES EDGE BOARD</div>
+        <div style={{ fontFamily: C.mono, fontSize: 9, letterSpacing: 1.5, color: C.ghost, textTransform: 'uppercase' }}>
+          Open futures · Model edge ranked · Operative tier
+        </div>
+      </div>
+
+      <div style={{ padding: '24px 40px 64px' }}>
+        {/* Controls: sport filter + freshness + refresh */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {EDGE_SPORT_OPTIONS.map((s) => {
+              const active = (s === 'ALL' && edgeSport === undefined) || s === edgeSport;
+              const count = s === 'ALL' ? futures.length : (sportCounts[s] || 0);
+              return (
+                <button key={s} onClick={() => setEdgeSport(s === 'ALL' ? undefined : s)} style={{ fontFamily: C.mono, fontSize: 8.5, letterSpacing: 1.5, padding: '7px 12px', textTransform: 'uppercase', border: `1px solid ${active ? C.ink : C.rule}`, color: active ? C.paper : C.ghost, background: active ? C.ink : 'transparent', cursor: 'pointer', borderRadius: 1, transition: 'all .15s' }}>
+                  {s}{!tieredOut && futures.length > 0 && <span style={{ marginLeft: 5, opacity: 0.55 }}>{count}</span>}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {freshAt && (
+              <span style={{ fontFamily: C.mono, fontSize: 8, letterSpacing: 1, color: C.ghost, textTransform: 'uppercase' }}>
+                Updated {timeAgo(freshAt)}
+              </span>
+            )}
+            <button
+              onClick={refetch}
+              style={{ fontFamily: C.mono, fontSize: 8.5, letterSpacing: 1.5, padding: '6px 12px', textTransform: 'uppercase', border: `1px solid ${C.rule}`, color: C.ghost, background: 'transparent', cursor: 'pointer', borderRadius: 1, transition: 'all .15s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.ink; e.currentTarget.style.color = C.ink; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.rule; e.currentTarget.style.color = C.ghost; }}
+            >
+              ↻ REFRESH
+            </button>
+          </div>
+        </div>
+
+        {/* TierGate — operative required, scout sees blurred teaser */}
+        <TierGate required="operative" fallback={<FuturesScoutTeaser />}>
+          {loading && (
+            <div style={{ padding: 40, textAlign: 'center', fontFamily: C.mono, fontSize: 9, color: C.ghost, letterSpacing: 2, textTransform: 'uppercase' }}>Loading edge data…</div>
+          )}
+          {error && (
+            <div style={{ padding: '12px 16px', fontFamily: C.mono, fontSize: 9, color: C.red, background: C.redLt, border: `1px solid ${C.redBd}`, marginBottom: 16 }}>{error}</div>
+          )}
+          {!loading && !error && futures.length === 0 && (
+            <div style={{ padding: 40, textAlign: 'center', fontFamily: C.mono, fontSize: 9, color: C.ghost, letterSpacing: 2, textTransform: 'uppercase' }}>
+              No futures with edge found — try a different sport filter.
+            </div>
+          )}
+          {!loading && !error && futures.length > 0 && (
+            <div style={{ border: `1px solid ${C.rule}`, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: C.mono, fontSize: 10 }}>
+                <thead>
+                  <tr>
+                    {['Sport', 'Market / Team', 'Best Price', 'Fair Price', 'Edge', 'Book', 'Elo', ''].map((h) => (
+                      <th key={h} style={{ fontFamily: C.mono, fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', color: C.ghost, textAlign: 'left', padding: '9px 12px', borderBottom: `2px solid ${C.ink}`, background: C.paper2, whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {futures.map((f, i) => {
+                    const sc = sportColor(f.sport);
+                    const edgePct = f.edge_bps != null ? (f.edge_bps / 100).toFixed(1) : null;
+                    const watched = isWatched(f.market_id);
+                    return (
+                      <tr key={f.market_id} style={{ borderBottom: `1px solid ${C.ruleLt}`, background: i % 2 === 0 ? C.cream : C.paper }}>
+                        <td style={{ padding: '11px 12px', whiteSpace: 'nowrap' }}>
+                          <span style={{ fontFamily: C.display, fontSize: 12, letterSpacing: 2, color: sc, padding: '1px 6px', background: `${sc}15`, border: `1px solid ${sc}40` }}>{f.sport}</span>
+                        </td>
+                        <td style={{ padding: '11px 12px', color: C.ink, fontWeight: 700, maxWidth: 260 }}>
+                          <div style={{ fontSize: 11 }}>{f.market_label}</div>
+                          {f.team && <div style={{ fontSize: 8.5, color: C.ghost, marginTop: 2 }}>{f.team}{f.position && ` · ${f.position}`}</div>}
+                        </td>
+                        <td style={{ padding: '11px 12px', fontFamily: C.display, fontSize: 20, color: (f.best_price ?? 0) > 0 ? C.green : C.amber, whiteSpace: 'nowrap' }}>
+                          {formatAmerican(f.best_price)}
+                        </td>
+                        <td style={{ padding: '11px 12px', fontFamily: C.display, fontSize: 16, color: C.ghost, whiteSpace: 'nowrap' }}>
+                          {formatAmerican(f.fair_price)}
+                        </td>
+                        <td style={{ padding: '11px 12px', whiteSpace: 'nowrap' }}>
+                          {edgePct != null ? (
+                            <span style={{ fontFamily: C.mono, fontSize: 11, fontWeight: 700, color: f.edge_bps > 0 ? C.green : C.red, background: f.edge_bps > 0 ? C.greenLt : C.redLt, border: `1px solid ${f.edge_bps > 0 ? C.greenBd : C.redBd}`, padding: '2px 7px', borderRadius: 1 }}>
+                              {f.edge_bps > 0 ? '+' : ''}{edgePct}%
+                            </span>
+                          ) : '—'}
+                        </td>
+                        <td style={{ padding: '11px 12px', fontFamily: C.mono, fontSize: 9, color: C.ghost }}>{f.best_book ?? '—'}</td>
+                        <td style={{ padding: '11px 12px', fontFamily: C.mono, fontSize: 9, color: C.ghost }}>{f.elo_rating != null ? f.elo_rating.toFixed(0) : '—'}</td>
+                        <td style={{ padding: '11px 12px', textAlign: 'right' }}>
+                          <button
+                            onClick={() => watched ? removeFromWatchlist(f.market_id) : addToWatchlist(f.market_id)}
+                            disabled={!watched && capReached}
+                            title={!watched && capReached ? 'Watchlist limit reached' : watched ? 'Remove from watchlist' : 'Add to watchlist'}
+                            style={{ fontFamily: C.mono, fontSize: 8, letterSpacing: 1.5, padding: '5px 10px', textTransform: 'uppercase', border: `1px solid ${watched ? C.green : C.rule}`, color: watched ? C.green : C.ghost, background: watched ? C.greenLt : 'transparent', cursor: !watched && capReached ? 'not-allowed' : 'pointer', opacity: !watched && capReached ? 0.4 : 1, borderRadius: 1, transition: 'all .15s', whiteSpace: 'nowrap' }}
+                          >
+                            {watched ? '★ WATCHING' : '+ WATCH'}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TierGate>
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════
    ROOT APP
 ═══════════════════════════════════════════════════════════════ */
 export default function App() {
   const [page, setPage] = useState("dossiers");
   const [bankroll, setBankroll] = useState(1000);
+  const { user, tier, isOperative, isCommand, signOut, loading: authLoading } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
+  const { alerts, loading: alertsLoading, error: alertsError, refetch: refetchAlerts } = useNeedleAlerts({ limit: 50 });
+  const [edgeSport, setEdgeSport] = useState(undefined);
+  const { futures, loading: futuresLoading, error: futuresError, tieredOut: futuresTieredOut, refetch: refetchFutures } = useFuturesEdge({ sport: edgeSport, limit: 100 });
+  const { add: addToWatchlist, remove: removeFromWatchlist, isWatched, capReached } = useWatchlist();
   const pages = [
+    { id: "needles", label: "Needle Alerts", badge: alerts.length > 0 ? alerts.length : undefined },
+    { id: "futures", label: "Edge Board", badge: !futuresTieredOut && futures.length > 0 ? futures.length : undefined },
     { id: "dossiers", label: "Active Briefs", badge: 4 },
     { id: "standings", label: "NBA Standings" },
     { id: "movement", label: "Line Movement", badge: 6 },
@@ -2551,12 +2947,45 @@ export default function App() {
                 {label} ACTIVE
               </div>
             ))}
+            {/* Auth button */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, paddingLeft: 10, borderLeft: `1px solid ${C.inkBorder}` }}>
+              {!user ? (
+                <button
+                  onClick={() => setShowAuth(true)}
+                  style={{ fontFamily: C.mono, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", padding: "6px 14px", background: "none", border: `1px solid ${C.inkBorder}`, color: "rgba(255,255,255,.5)", cursor: "pointer", transition: "color .15s, border-color .15s" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.green; e.currentTarget.style.color = C.green; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.inkBorder; e.currentTarget.style.color = "rgba(255,255,255,.5)"; }}
+                >
+                  Sign In
+                </button>
+              ) : (
+                <>
+                  <span style={{
+                    fontFamily: C.mono, fontSize: 8, letterSpacing: 2, textTransform: "uppercase",
+                    padding: "3px 8px", borderRadius: 1,
+                    border: `1px solid ${tier === "command" ? C.green : tier === "operative" ? C.blue : C.amber}40`,
+                    color: tier === "command" ? C.green : tier === "operative" ? C.blue : C.amber,
+                    background: `${tier === "command" ? C.green : tier === "operative" ? C.blue : C.amber}10`,
+                  }}>
+                    {tier?.toUpperCase()}
+                  </span>
+                  <button
+                    onClick={signOut}
+                    style={{ fontFamily: C.mono, fontSize: 9, letterSpacing: 2, textTransform: "uppercase", padding: "6px 12px", background: "none", border: `1px solid ${C.inkBorder}`, color: "rgba(255,255,255,.4)", cursor: "pointer" }}
+                  >
+                    Sign Out
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Pages */}
       <div style={{ minHeight: "calc(100vh - 136px)" }}>
+        {page === "needles" && <PageNeedles alerts={alerts} loading={alertsLoading} error={alertsError} refetch={refetchAlerts} user={user} isOperative={isOperative} />}
+        {page === "futures" && <PageFutures futures={futures} loading={futuresLoading} error={futuresError} tieredOut={futuresTieredOut} refetch={refetchFutures} isWatched={isWatched} addToWatchlist={addToWatchlist} removeFromWatchlist={removeFromWatchlist} capReached={capReached} edgeSport={edgeSport} setEdgeSport={setEdgeSport} />}
         {page === "dossiers" && <PageDossiers bankroll={bankroll} setBankroll={setBankroll} />}
         {page === "standings" && <PageStandings />}
         {page === "movement" && <PageMovement />}
@@ -2567,8 +2996,10 @@ export default function App() {
         {page === "pricing" && <PagePricing />}
       </div>
 
+      <AuthModal open={showAuth} onClose={() => setShowAuth(false)} />
+
       <style>{`
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
         input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;background:${C.ruleLt}}
         input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:${C.green};cursor:pointer}
         ::-webkit-scrollbar{width:5px;height:5px}
