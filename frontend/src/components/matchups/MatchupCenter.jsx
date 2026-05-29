@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 const API_BASE = import.meta.env.VITE_API_URL;
+if (!API_BASE) throw new Error("VITE_API_URL is not set. Add it to frontend/.env.local for local dev or Cloudflare Pages env vars for production.");
 
 function fetchStandings(sport) {
   return fetch(`${API_BASE}/api/v1/standings/${sport}`).then((r) => {

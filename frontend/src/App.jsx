@@ -7,6 +7,7 @@ import { useNeedleAlerts } from './hooks/useNeedleAlerts';
 import { useFuturesEdge } from './hooks/useFuturesEdge';
 import { useWatchlist } from './hooks/useWatchlist';
 import { formatAmerican } from './utils/oddsFormatter';
+import { GGDataProvider, useGG, DataStatusPill } from './useGGData';
 
 /* ═══════════════════════════════════════════════════════════════
    FONT INJECTION
@@ -1126,6 +1127,16 @@ const AUDIT_DATA = [
   },
 ];
 
+const SEED = {
+  date: TODAY,
+  season: { record: "31–18", wins: 31, losses: 18, winRate: "63.3%", units: "+18.4u", avgKelly: "2.1%", logged: 49, mlbStatus: "Day 2", nbaStatus: "Playoffs in 17 days" },
+  picks: PICKS,
+  standings: NBA_STANDINGS,
+  lastNight: LAST_NIGHT,
+  lineMovement: LM_DATA,
+  audit: AUDIT_DATA,
+};
+
 /* ═══════════════════════════════════════════════════════════════
    HOOKS
 ═══════════════════════════════════════════════════════════════ */
@@ -1718,10 +1729,11 @@ const DossierDetail = ({ pick, bankroll }) => {
    PAGE: DOSSIERS
 ═══════════════════════════════════════════════════════════════ */
 const PageDossiers = ({ bankroll, setBankroll }) => {
+  const { picks } = useGG();
   const [sel, setSel] = useState("lad");
-  const pick = PICKS.find((p) => p.id === sel);
+  const pick = picks.find((p) => p.id === sel);
   const [sportF, setSportF] = useState("all");
-  const visible = sportF === "all" ? PICKS : PICKS.filter((p) => p.sport.toLowerCase() === sportF);
+  const visible = sportF === "all" ? picks : picks.filter((p) => p.sport.toLowerCase() === sportF);
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "290px 1fr", minHeight: "calc(100vh - 136px)" }}>
@@ -1791,14 +1803,16 @@ const StandingRow = ({ row }) => {
   );
 };
 
-const PageStandings = () => (
+const PageStandings = () => {
+  const { standings, lastNight } = useGG();
+  return (
   <div style={{ background: C.paper }}>
     <SectionHdr title="NBA STANDINGS" meta={`Playoff picture · March 26, 2026 · ${21} games remaining`} />
     {/* Last night scoreboard */}
     <div style={{ padding: "24px 40px 0" }}>
       <div style={{ fontFamily: C.mono, fontSize: 9, letterSpacing: 2, color: C.ghost, textTransform: "uppercase", marginBottom: 12 }}>◀ Last Night's Results · March 25</div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 8, marginBottom: 28 }}>
-        {LAST_NIGHT.map((g, i) => {
+        {lastNight.map((g, i) => {
           const sc = g.sport === "MLB" ? C.amber : C.blue;
           return (
             <div key={i} style={{ background: C.cream, border: `1px solid ${C.rule}`, padding: "12px 14px", borderLeft: `3px solid ${sc}` }}>
@@ -1817,8 +1831,8 @@ const PageStandings = () => (
     {/* Conference standings */}
     <div style={{ padding: "0 40px 64px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
       {[
-        { conf: "Western Conference", data: NBA_STANDINGS.west },
-        { conf: "Eastern Conference", data: NBA_STANDINGS.east },
+        { conf: "Western Conference", data: standings.west },
+        { conf: "Eastern Conference", data: standings.east },
       ].map(({ conf, data }) => (
         <div key={conf}>
           <div style={{ fontFamily: C.display, fontSize: 20, letterSpacing: 2, color: C.ink, marginBottom: 12, borderBottom: `2px solid ${C.rule}`, paddingBottom: 8 }}>{conf}</div>
@@ -1853,7 +1867,8 @@ const PageStandings = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════
    PAGE: FORMULA LIBRARY
@@ -1921,10 +1936,11 @@ const PageFormulas = () => {
    PAGE: LINE MOVEMENT
 ═══════════════════════════════════════════════════════════════ */
 const PageMovement = () => {
+  const { lineMovement } = useGG();
   const [filt, setFilt] = useState("all");
   const TM = { sharp: "Sharp Money", steam: "Steam Move", rlm: "Reverse LM", fade: "Fade Signal" };
   const TC = { sharp: C.green, steam: C.amber, rlm: C.blue, fade: C.red };
-  const vis = filt === "all" ? LM_DATA : LM_DATA.filter((d) => d.type === filt);
+  const vis = filt === "all" ? lineMovement : lineMovement.filter((d) => d.type === filt);
   return (
     <div style={{ background: C.paper }}>
       <SectionHdr title="LINE MOVEMENT INTELLIGENCE" meta="Sharp · Steam · Reverse LM · Today's signals" />
@@ -2113,7 +2129,9 @@ const PageSGP = () => (
 /* ═══════════════════════════════════════════════════════════════
    PAGE: AUDIT ROOM
 ═══════════════════════════════════════════════════════════════ */
-const PageAudit = () => (
+const PageAudit = () => {
+  const { audit } = useGG();
+  return (
   <div style={{ background: C.paper }}>
     <SectionHdr title="THE AUDIT ROOM" meta="Wins and misses. We show both. Post-game EAA breakdowns." />
     <div style={{ padding: "24px 40px 64px" }}>
@@ -2135,7 +2153,7 @@ const PageAudit = () => (
           </div>
         ))}
       </div>
-      {AUDIT_DATA.map((entry, i) => {
+      {audit.map((entry, i) => {
         const sc = entry.sport.includes("MLB") ? C.amber : C.blue;
         return (
           <div key={i} style={{ border: `1px solid ${C.rule}`, background: C.cream, marginBottom: 20 }}>
@@ -2185,7 +2203,8 @@ const PageAudit = () => (
       })}
     </div>
   </div>
-);
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════
    PAGE: PRICING
@@ -2899,6 +2918,7 @@ export default function App() {
   ];
 
   return (
+    <GGDataProvider seed={SEED}>
     <div style={{ fontFamily: C.mono, background: C.ink, minHeight: "100vh" }}>
       {/* Classification bar */}
       <div style={{ background: C.stamp, textAlign: "center", padding: "5px 16px", fontFamily: C.mono, fontSize: 9, letterSpacing: 3.5, fontWeight: 700, textTransform: "uppercase", color: "#fff", position: "sticky", top: 0, zIndex: 200 }}>
@@ -3012,5 +3032,6 @@ export default function App() {
         }
       `}</style>
     </div>
+    </GGDataProvider>
   );
 }
