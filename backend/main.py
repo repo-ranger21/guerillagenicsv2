@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.middleware.rate_limit import limiter
 from api.middleware.cors import ALLOWED_ORIGINS
 from api.routes import (futures, needle, standings, bracket,
-                        players, alerts, watchlist, health)
+                        players, alerts, watchlist, health, picks)
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -30,6 +30,7 @@ app.include_router(bracket.router, prefix="/api/v1")
 app.include_router(players.router, prefix="/api/v1")
 app.include_router(alerts.router, prefix="/api/v1")
 app.include_router(watchlist.router, prefix="/api/v1")
+app.include_router(picks.router, prefix="/api/v1")
 
 
 @app.get("/")
