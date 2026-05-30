@@ -3,12 +3,6 @@
 Takes your sport pipeline's output and lands publishable picks into picks_daily,
 computing the STORED model outputs (EVI, Kelly) that become the audit-of-record.
 
-The math here mirrors the frontend FE engine exactly (see App.jsx). The existing
-backend/utils/odds_converter.py and backend/formulas/kelly_criterion.py round
-their results (to 4dp and 6dp respectively), which would break the pinned-value
-tests and the "math mirrors across stack" promise. These locals are intentionally
-unrounded for the intermediate step; rounding happens only in build_pick_row.
-
 THE PROBABILITY: model_prob is your Monte Carlo / Poisson output, supplied by
 the pipeline. It is NOT recomputed from the `components` heuristic — components
 are the explainability display only. EVI and Kelly derive from model_prob.
@@ -20,6 +14,7 @@ from datetime import date as date_cls
 from typing import Any
 
 from db.queries.picks_daily import upsert_picks_daily
+from formulas.betting_math import am_to_decimal, implied_prob, kelly, evi  # noqa: F401
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,30 +25,6 @@ PUBLISH_EVI = 3.0
 # Fractional Kelly applied to the full stake. 0.5x standard; the documented
 # early-season 0.35x discount can be passed per-run via kelly_multiplier.
 DEFAULT_KELLY_MULT = 0.5
-
-
-# ─── betting math (mirrors frontend FE exactly) ──────────────────────────────
-# NOTE: do not substitute odds_converter.american_to_decimal here — that
-# function returns full decimal odds (net + 1), rounded to 4dp. These locals
-# return the net multiplier unrounded, which is what the Kelly formula and EVI
-# need to match the frontend FE engine to within 1e-5.
-
-def am_to_decimal(odds: int) -> float:
-    return odds / 100 if odds > 0 else 100 / abs(odds)
-
-
-def implied_prob(odds: int) -> float:
-    return 100 / (odds + 100) if odds > 0 else abs(odds) / (abs(odds) + 100)
-
-
-def kelly(p: float, odds: int) -> float:
-    b = am_to_decimal(odds)
-    return max(0.0, (b * p - (1 - p)) / b)
-
-
-def evi(p: float, odds: int) -> float:
-    b = am_to_decimal(odds)
-    return (p * b - (1 - p)) * 100  # percent, matching the frontend
 
 
 # ─── row construction ────────────────────────────────────────────────────────
