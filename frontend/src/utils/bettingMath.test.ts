@@ -1,5 +1,36 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { describe, it, expect } from "vitest";
-import { removeVigMultiplicative, futuresEvAnnualized } from "./bettingMath";
+import { removeVigMultiplicative, futuresEvAnnualized, amToDecimal, impliedProb, kelly, evi } from "./bettingMath";
+
+// ─── Cross-stack parity gate (shared/betting_vectors.json) ──────────────────
+
+interface VectorCase {
+  fn: string;
+  args: Record<string, number>;
+  expect: number;
+  tol: number;
+}
+
+const vectors: { cases: VectorCase[] } = JSON.parse(
+  readFileSync(resolve(process.cwd(), "../shared/betting_vectors.json"), "utf-8")
+);
+
+const fnMap: Record<string, (args: Record<string, number>) => number> = {
+  am_to_decimal: ({ american }) => amToDecimal(american),
+  implied_prob:  ({ american }) => impliedProb(american),
+  kelly:         ({ p, american }) => kelly(p, american),
+  evi:           ({ p, american }) => evi(p, american),
+};
+
+describe("betting_vectors.json — cross-stack parity", () => {
+  for (const { fn, args, expect: expected, tol } of vectors.cases) {
+    it(`${fn}(${JSON.stringify(args)}) ≈ ${expected}`, () => {
+      const result = fnMap[fn](args);
+      expect(Math.abs(result - expected)).toBeLessThanOrEqual(tol);
+    });
+  }
+});
 
 // ─── removeVigMultiplicative ─────────────────────────────────────────────────
 

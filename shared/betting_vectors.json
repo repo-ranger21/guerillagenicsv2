@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "note": "Canonical betting-math vectors. Run by pytest (backend) AND vitest (frontend) against their respective implementations. If a formula changes, update these and BOTH languages must still pass. 'tol' is absolute tolerance. Edge values (exact rational results like 100/118) use a tight tol because both languages compute them identically in IEEE-754.",
+  "cases": [
+    { "fn": "am_to_decimal", "args": { "american": -118 }, "expect": 0.8474576271186441, "tol": 1e-12 },
+    { "fn": "am_to_decimal", "args": { "american": 113 }, "expect": 1.13, "tol": 1e-12 },
+    { "fn": "am_to_decimal", "args": { "american": 120 }, "expect": 1.2, "tol": 1e-12 },
+
+    { "fn": "implied_prob", "args": { "american": -118 }, "expect": 0.5412844036697247, "tol": 1e-12 },
+    { "fn": "implied_prob", "args": { "american": 100 }, "expect": 0.5, "tol": 1e-12 },
+    { "fn": "implied_prob", "args": { "american": 120 }, "expect": 0.45454545454545453, "tol": 1e-12 },
+
+    { "fn": "kelly", "args": { "p": 0.62, "american": -118 }, "expect": 0.1716, "tol": 1e-9 },
+    { "fn": "kelly", "args": { "p": 0.55, "american": 120 }, "expect": 0.175, "tol": 1e-9 },
+    { "fn": "kelly", "args": { "p": 0.40, "american": -118 }, "expect": 0.0, "tol": 1e-12 },
+
+    { "fn": "evi", "args": { "p": 0.62, "american": -118 }, "expect": 14.542372881355934, "tol": 1e-9 },
+    { "fn": "evi", "args": { "p": 0.55, "american": 120 }, "expect": 21.0, "tol": 1e-9 },
+    { "fn": "evi", "args": { "p": 0.50, "american": 100 }, "expect": 0.0, "tol": 1e-9 }
+  ]
+}

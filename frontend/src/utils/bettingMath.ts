@@ -5,6 +5,33 @@
  * "here's exactly how much to bet and why."
  */
 
+// ─── Canonical betting math (mirrored in backend/formulas/betting_math.py) ──
+// Policed by shared/betting_vectors.json run by both pytest and vitest.
+// RULE: nothing rounds here. Round once at storage or display.
+// CONVENTION: amToDecimal returns the NET profit multiplier b (decimal − 1),
+// NOT full decimal odds. Full decimal is b + 1. Kelly and EVI use net b.
+
+export function amToDecimal(american: number): number {
+  return american > 0 ? american / 100 : 100 / Math.abs(american);
+}
+
+export function impliedProb(american: number): number {
+  return american > 0
+    ? 100 / (american + 100)
+    : Math.abs(american) / (Math.abs(american) + 100);
+}
+
+export function kelly(p: number, american: number): number {
+  const b = amToDecimal(american);
+  return Math.max(0, p - (1 - p) / b);
+}
+
+export function evi(p: number, american: number): number {
+  const b = amToDecimal(american);
+  return (p * b - (1 - p)) * 100;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Converts American odds to raw implied probability.
  * +200 → 0.333, -150 → 0.600

@@ -41,11 +41,13 @@ def implied_prob(american: int) -> float:
 def kelly(p: float, american: int) -> float:
     """Full Kelly fraction of bankroll. Floors at 0 — never bet a negative edge.
 
-    f* = (b·p − q) / b,  where b = net multiplier, q = 1 − p.
+    f* = p − q/b,  where b = net multiplier, q = 1 − p.
+    Written as p − q/b rather than (b·p − q)/b: algebraically identical but the
+    simplified form avoids an extra multiply then divide, giving a floating-point
+    result within machine epsilon of the rational value — matching the vectors.
     """
     b = am_to_decimal(american)
-    q = 1 - p
-    return max(0.0, (b * p - q) / b)
+    return max(0.0, p - (1 - p) / b)
 
 
 def evi(p: float, american: int) -> float:
