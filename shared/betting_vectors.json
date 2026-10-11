@@ -2,20 +2,130 @@
   "version": 1,
   "note": "Canonical betting-math vectors. Run by pytest (backend) AND vitest (frontend) against their respective implementations. If a formula changes, update these and BOTH languages must still pass. 'tol' is absolute tolerance. Edge values (exact rational results like 100/118) use a tight tol because both languages compute them identically in IEEE-754.",
   "cases": [
-    { "fn": "am_to_decimal", "args": { "american": -118 }, "expect": 0.8474576271186441, "tol": 1e-12 },
-    { "fn": "am_to_decimal", "args": { "american": 113 }, "expect": 1.13, "tol": 1e-12 },
-    { "fn": "am_to_decimal", "args": { "american": 120 }, "expect": 1.2, "tol": 1e-12 },
-
-    { "fn": "implied_prob", "args": { "american": -118 }, "expect": 0.5412844036697247, "tol": 1e-12 },
-    { "fn": "implied_prob", "args": { "american": 100 }, "expect": 0.5, "tol": 1e-12 },
-    { "fn": "implied_prob", "args": { "american": 120 }, "expect": 0.45454545454545453, "tol": 1e-12 },
-
-    { "fn": "kelly", "args": { "p": 0.62, "american": -118 }, "expect": 0.1716, "tol": 1e-9 },
-    { "fn": "kelly", "args": { "p": 0.55, "american": 120 }, "expect": 0.175, "tol": 1e-9 },
-    { "fn": "kelly", "args": { "p": 0.40, "american": -118 }, "expect": 0.0, "tol": 1e-12 },
-
-    { "fn": "evi", "args": { "p": 0.62, "american": -118 }, "expect": 14.542372881355934, "tol": 1e-9 },
-    { "fn": "evi", "args": { "p": 0.55, "american": 120 }, "expect": 21.0, "tol": 1e-9 },
-    { "fn": "evi", "args": { "p": 0.50, "american": 100 }, "expect": 0.0, "tol": 1e-9 }
-  ]
+    {
+      "fn": "am_to_decimal",
+      "args": {
+        "american": -118
+      },
+      "expect": 0.8474576271186441,
+      "tol": 1e-12
+    },
+    {
+      "fn": "am_to_decimal",
+      "args": {
+        "american": 113
+      },
+      "expect": 1.13,
+      "tol": 1e-12
+    },
+    {
+      "fn": "am_to_decimal",
+      "args": {
+        "american": 120
+      },
+      "expect": 1.2,
+      "tol": 1e-12
+    },
+    {
+      "fn": "implied_prob",
+      "args": {
+        "american": -118
+      },
+      "expect": 0.5412844036697247,
+      "tol": 1e-12
+    },
+    {
+      "fn": "implied_prob",
+      "args": {
+        "american": 100
+      },
+      "expect": 0.5,
+      "tol": 1e-12
+    },
+    {
+      "fn": "implied_prob",
+      "args": {
+        "american": 120
+      },
+      "expect": 0.45454545454545453,
+      "tol": 1e-12
+    },
+    {
+      "fn": "kelly",
+      "args": {
+        "p": 0.62,
+        "american": -118
+      },
+      "expect": 0.1716,
+      "tol": 1e-09
+    },
+    {
+      "fn": "kelly",
+      "args": {
+        "p": 0.55,
+        "american": 120
+      },
+      "expect": 0.175,
+      "tol": 1e-09
+    },
+    {
+      "fn": "kelly",
+      "args": {
+        "p": 0.4,
+        "american": -118
+      },
+      "expect": 0.0,
+      "tol": 1e-12
+    },
+    {
+      "fn": "evi",
+      "args": {
+        "p": 0.62,
+        "american": -118
+      },
+      "expect": 14.542372881355934,
+      "tol": 1e-09
+    },
+    {
+      "fn": "evi",
+      "args": {
+        "p": 0.55,
+        "american": 120
+      },
+      "expect": 21.0,
+      "tol": 1e-09
+    },
+    {
+      "fn": "evi",
+      "args": {
+        "p": 0.5,
+        "american": 100
+      },
+      "expect": 0.0,
+      "tol": 1e-09
+    }
+  ],
+  "qb_replacement": {
+    "derived_at": "2026-09-28",
+    "methodology": "nflverse games.csv, seasons 2021-2024, REG only. For each team-season, primary QB = qb_id with the most starts (home_qb_id/away_qb_id). A team-game is flagged 'backup_start' when the starting qb_id != that team's primary_qb_id AND the primary had >=8 starts that season (i.e. was a real, established starter, not a committee). Residual = actual team margin - that team's expected margin implied by the closing spread_line (spread already reflects the market's knowledge that a backup is starting, since these are pre-announced/known QB changes in the vast majority of cases). Baseline = same teams' games where the primary QB played.",
+    "n_backup_games": 345,
+    "n_baseline_games": 1761,
+    "mean_residual_pts": -1.28,
+    "median_residual_pts": -1.5,
+    "std_residual_pts": 12.14,
+    "se_residual_pts": 0.65,
+    "pct_backup_games_below_expected": 0.516,
+    "welch_ttest_vs_baseline": {
+      "t": -2.07,
+      "p": 0.0394
+    },
+    "caveats": [
+      "n mixes genuine injury-forced replacements with voluntary rest-day/committee starts; not separated because injury-report data wasn't joined in this derivation",
+      "SE (0.65) is roughly half the point estimate (-1.28) -- real and marginally significant (p=0.039), not a high-confidence effect like MAX_DISAGREEMENT_PTS",
+      "effect is measured AFTER the market has already priced in the backup start via the closing line, so it represents residual underperformance beyond what the market already expects, not the full QB-change impact",
+      "no player-specific breakout; this is a generic backup-QB-starts constant, not calibrated to any individual QB (e.g. Case Keenum specifically)",
+      "not wired into gate.py or run.py as of this write -- documentation only, pending a decision on whether/how to use it"
+    ],
+    "status": "NOT CALIBRATED - available as a reference distribution for manual flagging only, per the flag-don't-adjust precedent used for Chris Jones (n=6) and Caleb Williams' absence"
+  }
 }
