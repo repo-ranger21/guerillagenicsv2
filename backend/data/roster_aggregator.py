@@ -6,7 +6,6 @@ the Elo (apply_roster_adjustment) and scoring (compute_lambdas_from_profiles) en
 
 import glob
 import logging
-import math
 from pathlib import Path
 
 import pandas as pd

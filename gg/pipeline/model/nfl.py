@@ -53,7 +53,7 @@ N = 100_000    # simulations; convergence-checked vs closed form in examples/gg_
 # that would fix it.
 
 
-import numpy as np
+import numpy as np  # noqa: E402
 
 
 def simulate_margin(edge_pts: float, sigma: float, n: int, seed: int) -> np.ndarray:

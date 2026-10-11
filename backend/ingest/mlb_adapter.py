@@ -17,8 +17,7 @@ Entry points:
 
 from __future__ import annotations
 
-import math
-from datetime import date as date_cls, timedelta
+from datetime import date as date_cls
 from typing import Any
 
 import requests

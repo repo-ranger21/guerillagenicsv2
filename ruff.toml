@@ -1,0 +1,3 @@
+[lint.per-file-ignores]
+# Package __init__ modules re-export their public API on purpose.
+"__init__.py" = ["F401"]

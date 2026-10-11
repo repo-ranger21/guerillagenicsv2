@@ -1,4 +1,3 @@
-import pytest
 from formulas.momentum_decay import compute_mdi, compute_mdi_batch
 
 

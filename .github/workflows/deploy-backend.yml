@@ -8,7 +8,12 @@ on:
       - ".github/workflows/deploy-backend.yml"
 
 jobs:
+  ci:
+    name: CI gate
+    uses: ./.github/workflows/ci.yml
+
   deploy:
+    needs: ci
     name: Build + Deploy to Cloud Run
     runs-on: ubuntu-latest
     permissions:
@@ -62,10 +67,13 @@ jobs:
           SERVICE_URL=$(gcloud run services describe guerillagenics-core-engine \
             --region us-west1 --format "value(status.url)")
           echo "Service URL: $SERVICE_URL"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL/health")
-          echo "Health check status: $STATUS"
-          if [ "$STATUS" != "200" ]; then
-            echo "Health check FAILED with status $STATUS"
+          BODY=$(curl -s -w "\n%{http_code}" "$SERVICE_URL/health")
+          STATUS=$(echo "$BODY" | tail -1)
+          JSON=$(echo "$BODY" | head -n -1)
+          echo "Health check status: $STATUS body: $JSON"
+          # A catch-all SPA also returns 200 on /health, so assert the JSON body.
+          if [ "$STATUS" != "200" ] || ! echo "$JSON" | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'; then
+            echo "Health check FAILED (status $STATUS) — wrong app or unhealthy"
             exit 1
           fi
           echo "Health check PASSED"

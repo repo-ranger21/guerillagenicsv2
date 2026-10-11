@@ -129,7 +129,6 @@ def _evaluate_game(conn, game: GameForDate, game_date: date_type, evaluated_at: 
     """One game -> (write_result_dict, 'published'|'skipped'). Shared by
     run_for_date and run_for_week so there is exactly one evaluation path,
     not two copies that can drift."""
-    label = f"{game.away_abbreviation}@{game.home_abbreviation}"
 
     home_features = load_latest_team_features(conn, game.home_team_id, as_of_cutoff=game.game_time)
     away_features = load_latest_team_features(conn, game.away_team_id, as_of_cutoff=game.game_time)

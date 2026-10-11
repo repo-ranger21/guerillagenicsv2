@@ -5,7 +5,6 @@ probability functions all operate correctly on real and mock data.
 """
 
 import glob
-import os
 import pytest
 
 from pathlib import Path
@@ -33,6 +32,7 @@ needs_mlb = pytest.mark.skipif(MLB_CSV is None, reason="MLB CSV not found")
 
 # ─── Test 1: Aggregation layer returns non-empty dicts ───────────────────────
 
+@needs_nfl
 def test_aggregate_nfl_teams_non_empty():
     from data.roster_aggregator import aggregate_nfl_teams
     assert NFL_CSV is not None, "NFL CSV not found — is data/ present?"
@@ -46,6 +46,7 @@ def test_aggregate_nfl_teams_non_empty():
             assert key in p, f"{team} missing key {key!r}"
 
 
+@needs_nba
 def test_aggregate_nba_teams_non_empty():
     from data.roster_aggregator import aggregate_nba_teams
     assert NBA_CSV is not None, "NBA CSV not found"
@@ -57,6 +58,7 @@ def test_aggregate_nba_teams_non_empty():
             assert key in p, f"{team} missing key {key!r}"
 
 
+@needs_mlb
 def test_aggregate_mlb_teams_non_empty():
     from data.roster_aggregator import aggregate_mlb_teams
     assert MLB_CSV is not None, "MLB CSV not found"

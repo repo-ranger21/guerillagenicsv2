@@ -18,7 +18,7 @@ row shape to upsert, regardless of status.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date as date_type, datetime
 from zoneinfo import ZoneInfo
 

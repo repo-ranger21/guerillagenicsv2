@@ -1,4 +1,3 @@
-import pytest
 from formulas.playoff_dna import compute_pds
 
 

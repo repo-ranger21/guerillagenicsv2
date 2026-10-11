@@ -9,11 +9,10 @@ Proves:
 
 import math
 
-import pytest
 
 from formulas.monte_carlo import win_probability
 from ingest.mlb_adapter import adapt_mlb_games
-from ingest.picks_builder import build_pick_row, PUBLISH_EVI
+from ingest.picks_builder import build_pick_row
 
 
 # ─── fixtures ────────────────────────────────────────────────────────────────

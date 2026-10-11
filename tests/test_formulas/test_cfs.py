@@ -1,4 +1,3 @@
-import pytest
 from formulas.composite_futures import compute_cfs, rank_teams
 
 

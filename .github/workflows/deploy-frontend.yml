@@ -8,7 +8,12 @@ on:
       - ".github/workflows/deploy-frontend.yml"
 
 jobs:
+  ci:
+    name: CI gate
+    uses: ./.github/workflows/ci.yml
+
   deploy:
+    needs: ci
     name: Build + Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
 
