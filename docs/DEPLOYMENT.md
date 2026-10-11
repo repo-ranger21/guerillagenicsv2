@@ -14,7 +14,8 @@ Nightly cron → Cloud Run Job (ingest orchestrator)
 
 - GCP project with Cloud Run, Cloud Build, and Secret Manager APIs enabled
 - Workload Identity Federation pool configured (no service account JSON keys)
-- Supabase project with schema from `backend/db/schema.sql` applied
+- Supabase project with schema from `supabase/migrations/` applied — the sole
+  source of truth for schema; no other schema file exists in this repo
 - Cloudflare Pages project named `guerillagenics-frontend`
 - GitHub repository secrets set (see below)
 
@@ -39,8 +40,12 @@ All sensitive runtime values (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `ODDS_API_
 
 ### 1. Apply Database Schema
 
+`supabase/migrations/` is the sole source of truth for schema — no other
+schema file exists in this repo.
+
 ```bash
-psql "$SUPABASE_DB_URL" < backend/db/schema.sql
+supabase link --project-ref rdmapkebskznphgvkfvx
+supabase db push
 ```
 
 ### 2. Seed ELO Ratings
