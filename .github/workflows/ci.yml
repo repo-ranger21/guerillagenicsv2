@@ -67,3 +67,19 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_URL: https://guerillagenics-core-engine-391532873800.us-west1.run.app
+
+  site-test:
+    name: Site — Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Unit tests
+        run: npm test
+        working-directory: site
