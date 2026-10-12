@@ -1,6 +1,13 @@
-# EAA Standard — Edge-Adjusted Analysis
+# EAA Standard — Explainable, Auditable, Actionable
 
-EAA (Edge-Adjusted Analysis) is GuerillaGenics' output format for communicating model findings. Every NEEDLE alert, futures card, and API response uses the EAA standard.
+EAA means every metric and every pick is:
+
+- **Explainable** — a plain-language reason generated from the stored numbers, never freehand.
+- **Auditable** — traceable to its inputs (`audit`, `model_runs`, `ingest_runs`) and reproducible.
+- **Actionable** — carries a threshold-defined decision: odds, EVI, Kelly size, or an explicit skip with a reason.
+
+> The field table below documents the **futures-era** output format (NEEDLE alerts, futures cards).
+> It is legacy. The current NFL pick format is the `picks_daily` row; see `db/migrations/` and `gg/pipeline/snapshot.py`.
 
 ---
 
