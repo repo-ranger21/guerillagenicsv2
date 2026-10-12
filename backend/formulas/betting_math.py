@@ -1,10 +1,10 @@
 """Canonical betting math — the single source of truth.
 
-Every Kelly/EVI number in the product originates here. The frontend mirror in
-frontend/src/utils/bettingMath.ts implements the SAME functions, and both sides
-are policed by the shared vectors in shared/betting_vectors.json (run by pytest
-here and by vitest there). Change a formula — update the vectors — either
-language falling out of line turns its CI red. Drift becomes unmergeable.
+Every Kelly/EVI number in the product originates here. The shared vectors in
+shared/betting_vectors.json police it (run by pytest). Change a formula and
+update the vectors in the same commit, or CI turns red. Any future non-Python
+implementation must run the same vectors; the retired JS mirror lives at the
+git tag archive/pre-neon.
 
 RULE: round only at the edges. Nothing here rounds. Callers round exactly once,
 at storage (picks_builder) or display (a thin formatter). Mid-formula rounding

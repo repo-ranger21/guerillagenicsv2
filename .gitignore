@@ -132,3 +132,6 @@ requirements_current.txt
 # Claude Code local state
 .claude/
 .neon
+
+# Keep the committed template
+!.env.example
