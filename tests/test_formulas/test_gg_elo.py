@@ -1,5 +1,5 @@
 import pytest
-from formulas.gg_elo import (
+from gg.formulas.gg_elo import (
     expected_score, update_elo, season_reset,
     normalize_elo_to_score, BASE_RATING, EloState
 )
@@ -42,7 +42,7 @@ def test_normalize_elo_midpoint():
 
 
 def test_compute_gg_elo_from_games():
-    from formulas.gg_elo import compute_gg_elo_from_games
+    from gg.formulas.gg_elo import compute_gg_elo_from_games
     games = [
         {"winner_id": "A", "loser_id": "B", "margin": 8, "winner_home": True, "date": "2025-01-01"},
         {"winner_id": "B", "loser_id": "C", "margin": 3, "winner_home": False, "date": "2025-01-02"},

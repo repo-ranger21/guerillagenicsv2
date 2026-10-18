@@ -19,7 +19,7 @@
 ## Testing
 
 - [ ] Unit tests added / updated
-- [ ] `pytest backend/tests/` passes locally
+- [ ] `pytest tests/` passes locally
 - [ ] Frontend builds without errors (`npm run build`)
 - [ ] Tested against mock data in development
 

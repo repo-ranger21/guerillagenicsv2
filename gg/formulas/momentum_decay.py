@@ -5,7 +5,7 @@ Recent games matter more than older games; decay rate configurable.
 """
 
 import math
-from utils.normalizer import normalize_0_100
+from gg.utils.normalizer import normalize_0_100
 
 DEFAULT_DECAY = 0.85
 WINDOW = 20

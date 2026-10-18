@@ -4,7 +4,7 @@ Compares GuerillaGenics model probability to vig-removed market odds.
 Fires the NEEDLE alert when 6 specific market inefficiency signals align.
 """
 
-from utils.odds_converter import remove_vig_from_odds, remove_vig_futures
+from gg.utils.odds_converter import remove_vig_from_odds, remove_vig_futures
 
 NEEDLE_THRESHOLD = 0.07
 LOCK_THRESHOLD = 0.05

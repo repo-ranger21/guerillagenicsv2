@@ -4,7 +4,7 @@ Remaining schedule difficulty based on opponent GG-ELO ratings,
 home/away splits, and back-to-back frequency.
 """
 
-from utils.normalizer import normalize_0_100
+from gg.utils.normalizer import normalize_0_100
 
 BASE_ELO = 1500.0
 

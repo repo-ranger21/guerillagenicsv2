@@ -38,7 +38,7 @@ Pick integrity is enforced in code, not by convention:
 | Path | What it is |
 |---|---|
 | `gg/` | The engine: `cli.py`, `season.py`, `pipeline/` (odds, features, model, run, write, grade) |
-| `backend/formulas`, `backend/utils` | Shared betting math (Kelly, EVI, Elo, ...) imported by `gg/` |
+| `gg/formulas`, `gg/utils` | Shared betting math (Kelly, EVI, Elo, ...) used by the pipeline |
 | `db/migrations/` | Neon schema, applied by hand in the Neon SQL editor, in order |
 | `site/` | Static landing page + Pages Functions (see `site/README.md`) |
 | `shared/betting_vectors.json` | Reference vectors the Python tests check |
@@ -54,7 +54,7 @@ The previous Supabase/FastAPI/React platform is preserved at the git tag
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env.local        # DATABASE_URL (Neon), ODDS_API_KEY
-pytest tests/ && ruff check gg/ backend/ tests/
+pytest tests/ && ruff check gg/ tests/
 
 python -m gg.cli odds --dry-run
 python -m gg.cli --current --dry-run

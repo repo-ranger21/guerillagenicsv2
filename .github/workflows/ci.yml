@@ -24,7 +24,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Lint with ruff
-        run: ruff check gg/ backend/ tests/
+        run: ruff check gg/ tests/
 
       - name: Run tests (gg pipeline, grading, formulas)
         run: pytest tests/ -v --tb=short
@@ -32,6 +32,20 @@ jobs:
           # No test touches the network or a database; these only satisfy imports.
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
           ODDS_API_KEY: placeholder_odds_key
+
+  secret-scan:
+    name: Secrets — gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan history for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
 
   site-test:
     name: Site — unit tests

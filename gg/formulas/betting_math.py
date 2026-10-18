@@ -16,7 +16,7 @@ CONVENTION (read this before touching anything):
     -118 → 100/118 ≈ 0.8475   (risk 118 to win 100)
     +113 → 1.13               (risk 100 to win 113)
   Kelly and EVI are defined in terms of this net b. This matches the frontend
-  FE engine. (The separate backend/utils/odds_converter.american_to_decimal
+  FE engine. (The separate gg/utils/odds_converter.american_to_decimal
   returns FULL decimal rounded to 4dp — that is a DISPLAY helper and must never
   be used inside these formulas.)
 """

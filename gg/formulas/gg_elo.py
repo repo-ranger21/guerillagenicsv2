@@ -68,7 +68,7 @@ def compute_gg_elo_from_games(games: list[dict], teams: dict[str, EloState]) -> 
     # feeds into Elo. Active pipelines (nfl_pipeline.py, mlb_pipeline.py) approximate
     # Elo as 1500 + (win_pct - 0.5)*400 rather than calling this function at all.
     # apply_roster_adjustment() (added below) adds a post-hoc roster-quality nudge
-    # derived from backend/data/roster_aggregator.py profiles.
+    # derived from the retired roster aggregator profiles.
     for g in sorted(games, key=lambda x: x.get("date", "")):
         wid, lid = g["winner_id"], g["loser_id"]
         if wid not in teams:

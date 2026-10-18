@@ -5,7 +5,7 @@ Weights configurable via environment; defaults tuned against 2023–2025 seasons
 """
 
 import os
-from utils.normalizer import clamp
+from gg.utils.normalizer import clamp
 
 DEFAULT_WEIGHTS = {
     "gg_elo":   0.22,

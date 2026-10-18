@@ -4,8 +4,8 @@ Accounts for home/away split, travel distance, rest days, altitude,
 and (for NFL/outdoor sports) weather conditions.
 """
 
-from utils.haversine import travel_fatigue_factor
-from utils.normalizer import clamp
+from gg.utils.haversine import travel_fatigue_factor
+from gg.utils.normalizer import clamp
 
 
 HOME_COURT_BASE = 3.5

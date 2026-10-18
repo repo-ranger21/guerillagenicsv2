@@ -4,7 +4,7 @@ Quantifies the win-share/WAR impact of current injuries on championship probabil
 Accounts for injury duration, player replacement level, and lineup depth.
 """
 
-from utils.normalizer import clamp
+from gg.utils.normalizer import clamp
 
 STATUS_MULTIPLIERS = {
     "OUT": 1.0,

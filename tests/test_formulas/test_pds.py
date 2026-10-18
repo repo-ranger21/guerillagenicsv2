@@ -1,4 +1,4 @@
-from formulas.playoff_dna import compute_pds
+from gg.formulas.playoff_dna import compute_pds
 
 
 def test_experienced_coach_scores_higher():

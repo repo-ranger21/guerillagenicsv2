@@ -4,7 +4,7 @@ Measures a team's historical postseason pedigree:
 coach experience, clutch performance, series resilience, and recent playoff depth.
 """
 
-from utils.normalizer import clamp
+from gg.utils.normalizer import clamp
 
 
 def coach_experience_score(playoff_years: int, finals_appearances: int, rings: int) -> float:

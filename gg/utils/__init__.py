@@ -1,4 +1,4 @@
-from utils.odds_converter import (
+from gg.utils.odds_converter import (
     american_to_decimal,
     decimal_to_american,
     american_to_implied_prob,
@@ -9,4 +9,4 @@ from utils.odds_converter import (
     best_american_odds,
     vig_percentage,
 )
-from utils.normalizer import clamp
+from gg.utils.normalizer import clamp

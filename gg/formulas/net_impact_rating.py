@@ -4,7 +4,7 @@ Pace-adjusted net rating normalized against opponent quality.
 Accounts for opponent strength percentile when computing final NIR score.
 """
 
-from utils.normalizer import normalize_0_100
+from gg.utils.normalizer import normalize_0_100
 
 
 def pace_adjust(net_rating: float, pace: float, league_avg_pace: float = 100.0) -> float:

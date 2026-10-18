@@ -3,8 +3,8 @@ Kelly Criterion + Quarter-Kelly calculator for optimal bet sizing.
 Uses GuerillaGenics model probability vs best available odds.
 """
 
-from utils.odds_converter import american_to_decimal
-from utils.normalizer import clamp
+from gg.utils.odds_converter import american_to_decimal
+from gg.utils.normalizer import clamp
 
 
 def kelly_fraction(prob: float, decimal_odds: float) -> float:

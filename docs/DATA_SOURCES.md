@@ -1,6 +1,6 @@
 # Data Sources
 
-All scrapers live in `backend/scrapers/`. Every HTTP call uses Tenacity retry logic (3 attempts, exponential backoff).
+Data pulls live in `gg/pipeline/`. Every HTTP call uses Tenacity retry logic (3 attempts, exponential backoff).
 
 ---
 
