@@ -79,3 +79,14 @@ job stays quiet outside configured seasons.
 ## License
 
 See `LICENSE`.
+
+## Weekly stats snapshots
+
+Every Tuesday (after Monday Night Football) `GG Weekly Snapshot` freezes the finished week
+under `snapshots/<season>/week_<WW>/`: team and player stats for the week, season-to-date
+totals, the model's team ratings, games with closing spreads, and a `MANIFEST.json` of sha256
+hashes. A week is write-once; `python -m gg.cli snapshot-week --verify` flags any edit.
+Weeks 1-6 of 2026 are `kind: backfill` (rebuilt from nflverse after the fact). The spreadsheet
+`GG_<season>_W<WW>_Snapshot.xlsx` is a generated view, attached to each workflow run.
+
+Backtest of the model: [docs/BACKTEST_NFL.md](docs/BACKTEST_NFL.md) (`python scripts/backtest_nfl.py`).

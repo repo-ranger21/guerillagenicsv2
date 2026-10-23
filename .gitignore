@@ -139,3 +139,6 @@ supabase/
 hello.ts
 workspace_tree_*.txt
 requirements_current.txt
+
+# Generated spreadsheets (CSV snapshots are the record)
+snapshots/**/*.xlsx

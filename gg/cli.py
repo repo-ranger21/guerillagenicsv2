@@ -6,6 +6,7 @@ gg.cli — the one entry point for the engine.
   python -m gg.cli --current                        evaluate the current NFL week
   python -m gg.cli odds [--week 7 --season 2026]    pull lines (default: current week)
   python -m gg.cli grade [--dry-run]                record scores, settle picks
+  python -m gg.cli snapshot-week [--week N]         freeze team/player stats for a finished week
 
 Thin wrapper: parse args, call the pipeline, print, set the exit code.
 Picks for games that have already kicked off are never touched (see
@@ -16,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import date, datetime
 
@@ -69,6 +71,50 @@ def _cmd_grade(argv: list[str]) -> int:
     return 0
 
 
+def _cmd_snapshot_week(argv: list[str]) -> int:
+    import pandas as pd
+
+    from gg.pipeline import weekly_snapshot as ws
+
+    p = argparse.ArgumentParser(prog="gg.cli snapshot-week")
+    p.add_argument("--season", type=int, default=2026)
+    p.add_argument("--week", type=int, help="Default: latest fully completed week")
+    p.add_argument("--backfill", action="store_true", help="Also freeze weeks 1..N that have no snapshot (labelled backfill)")
+    p.add_argument("--verify", action="store_true", help="Check frozen files against their sha256 hashes")
+    p.add_argument("--force", action="store_true", help="Replace an existing frozen week")
+    p.add_argument("--no-xlsx", action="store_true")
+    args = p.parse_args(argv)
+
+    games = pd.read_csv(ws.GAMES_URL)
+    week = args.week or ws.latest_completed_week(games, args.season)
+    if not week:
+        print(f"snapshot: no completed week in {args.season}")
+        return 0
+    if args.week and args.week not in ws.completed_weeks(games, args.season):
+        print(f"snapshot: week {args.week} is not complete; refusing to freeze a partial week")
+        return 1
+    if args.verify:
+        bad = []
+        for w in range(1, week + 1):
+            bad += ws.verify_week(args.season, w) if os.path.exists(ws.week_dir(ws.SNAPSHOT_ROOT, args.season, w)) else []
+        print("verify: OK" if not bad else "verify: PROBLEMS\n  " + "\n  ".join(bad))
+        return 1 if bad else 0
+
+    weeks = list(range(1, week + 1)) if args.backfill else [week]
+    data = ws.load_data(args.season, games)
+    for w in weeks:
+        exists = os.path.exists(os.path.join(ws.week_dir(ws.SNAPSHOT_ROOT, args.season, w), "MANIFEST.json"))
+        if exists and not args.force:
+            print(f"snapshot week {w}: already frozen, skipped")
+            continue
+        kind = "live" if w == week and not args.backfill else "backfill"
+        out = ws.freeze_week(args.season, w, kind=kind, force=args.force, data=data)
+        print(f"snapshot week {w}: frozen ({kind}) -> {out}")
+    if not args.no_xlsx:
+        print(f"workbook: {ws.build_workbook(args.season, week)}")
+    return 0
+
+
 def _cmd_picks(argv: list[str]) -> int:
     from gg.pipeline.run import run_for_date, run_for_week
 
@@ -103,7 +149,7 @@ def _cmd_picks(argv: list[str]) -> int:
 
 def main(argv: list[str] | None = None) -> None:
     argv = list(sys.argv[1:] if argv is None else argv)
-    commands = {"odds": _cmd_odds, "grade": _cmd_grade}
+    commands = {"odds": _cmd_odds, "grade": _cmd_grade, "snapshot-week": _cmd_snapshot_week}
     if argv and argv[0] in commands:
         code = commands[argv[0]](argv[1:])
     else:
