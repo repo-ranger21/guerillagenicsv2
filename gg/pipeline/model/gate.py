@@ -8,12 +8,12 @@ BACKTESTED, AND NO CONFIGURATION SHOWS EDGE (2026-10-23): scripts/backtest_nfl.p
 (results in docs/BACKTEST_NFL.md) replays this exact gate over 1,087 games,
 2022-2025, walk-forward, flat -110 against the closing spread.
 
-  - Published bets: 398-410-21, 49.3% wins, -5.8% ROI (95% CI -12.2 to +0.6).
-  - Gap > 7 pts: 23-35-1, -23.9% ROI. The cap is directionally supported:
+  - Published bets: 402-408-20, 49.6% wins, -5.1% ROI (95% CI -11.5 to +1.3).
+  - Gap > 7 pts: 23-36-1, -25.2% ROI. The cap is directionally supported:
     a large disagreement with the line is the model missing information.
   - Gaps below 7 are not distinguishable from coin flips; no EVI bucket
     clears break-even, and realised ROI does not rise with stated EVI.
-  - Mean stated EVI on published bets was +11.2% against -5.8% realised.
+  - Mean stated EVI on published bets was +12.0% against -5.1% realised.
 
 So the gate is a risk filter, not an edge finder. It keeps the model from
 publishing its worst-looking disagreements; it does not make the remaining
@@ -24,8 +24,8 @@ from dataclasses import dataclass
 from typing import Literal
 
 # --- constants -----------------------------------------------------------
-# Backtest by |model - line| gap (docs/BACKTEST_NFL.md): 5-7 pts 46-36-1 (+7.0% ROI,
-# CI spans zero); 7+ pts 23-35-1 (-23.9% ROI). 7.0 is kept as a risk cap.
+# Backtest by |model - line| gap (docs/BACKTEST_NFL.md): 5-7 pts 50-32-2 (+16.0% ROI,
+# CI spans zero); 7+ pts 23-36-1 (-25.2% ROI). 7.0 is kept as a risk cap.
 MAX_DISAGREEMENT_PTS = 7.0  # risk cap, supported by backtest on the high side only
 
 # Kelly assumes you know the true probability. We demonstrably do not —
@@ -93,7 +93,7 @@ def gate(
         return Decision(
             "skipped_model_uncertainty",
             f"model disagrees with market by {gap:.1f} pts "
-            f"(cap {MAX_DISAGREEMENT_PTS:.0f}; gaps above it went 23-35-1 in "
+            f"(cap {MAX_DISAGREEMENT_PTS:.0f}; gaps above it went 23-36-1 in "
             f"the 2022-25 backtest). Large disagreement indicates missing "
             f"information, not edge.",
             0.0, kelly_pct, tuple(flags))

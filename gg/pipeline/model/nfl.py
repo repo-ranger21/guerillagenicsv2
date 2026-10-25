@@ -27,8 +27,8 @@ Provenance (backtest: scripts/backtest_nfl.py -> docs/BACKTEST_NFL.md,
 
 WHAT THE BACKTEST DOES NOT SHOW: edge. The model is less accurate than the
 closing line (MAE 10.00 vs 9.49), and its disagreement with the line has no
-significant predictive value (t = -0.52). Published bets went 398-410-21
-(-5.8% ROI at flat -110). Stated EVI is therefore an unvalidated model
+significant predictive value (t = -0.52). Published bets went 402-408-20
+(-5.1% ROI at flat -110). Stated EVI is therefore an unvalidated model
 output, not a measured advantage. Do not describe it as an edge.
 
   N            — 100,000 simulations. Matches examples/gg_sim.py and

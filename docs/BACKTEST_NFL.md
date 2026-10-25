@@ -1,12 +1,12 @@
 # NFL spread backtest (walk-forward, 2022-2025)
 
-Games: 1087 regular-season games. Production constants: CARRY=0.4, K=10, HFA=1.8, SIGMA=13.2. Flat -110 pricing, 1 unit per bet, closing spread. Break-even win rate 52.38%.
+Games: 1087 regular-season games. Production constants: CARRY=0.4, K=10, HFA=2.15, SIGMA=12.65. Flat -110 pricing, 1 unit per bet, closing spread. Break-even win rate 52.38%.
 
 ## 1. Does the model beat the market on accuracy?
 
-- MAE vs final margin: model **10.00**, closing line **9.49**
-- RMSE vs final margin: model 12.91, closing line 12.36
-- Mean |model - line|: 2.66 pts
+- MAE vs final margin: model **10.01**, closing line **9.49**
+- RMSE vs final margin: model 12.90, closing line 12.36
+- Mean |model - line|: 2.70 pts
 
 Information test: `result = a + b*line + c*(model - line)`. If the model adds edge, c is positive and significant; c = 0 means the line already contains what the model knows.
 
@@ -16,36 +16,36 @@ Information test: `result = a + b*line + c*(model - line)`. If the model adds ed
 
 | Slice | n | W-L-P | Win % | ROI | 95% CI |
 |---|---|---|---|---|---|
-| Every game, higher-EVI side | 1087 | 525-533-29 | 49.6% | -5.1% | [-10.7, +0.5] |
-| Published (passes gate) | 829 | 398-410-21 | 49.3% | -5.8% | [-12.2, +0.6] |
-| Skipped by gate | 258 | 127-123-8 | 50.8% | -2.9% | [-14.4, +8.6] |
-| Published, 2022 | 208 | 101-99-8 | 50.5% | -3.5% | [-16.2, +9.3] |
-| Published, 2023 | 213 | 96-107-10 | 47.3% | -9.3% | [-21.8, +3.3] |
-| Published, 2024 | 201 | 107-91-3 | 54.0% | +3.1% | [-10.0, +16.2] |
-| Published, 2025 | 207 | 94-113-0 | 45.4% | -13.3% | [-26.3, -0.3] |
+| Every game, higher-EVI side | 1087 | 521-537-29 | 49.2% | -5.8% | [-11.4, -0.2] |
+| Published (passes gate) | 830 | 402-408-20 | 49.6% | -5.1% | [-11.5, +1.3] |
+| Skipped by gate | 257 | 119-129-9 | 48.0% | -8.1% | [-19.6, +3.4] |
+| Published, 2022 | 207 | 101-98-8 | 50.8% | -3.0% | [-15.8, +9.8] |
+| Published, 2023 | 208 | 95-104-9 | 47.7% | -8.5% | [-21.2, +4.2] |
+| Published, 2024 | 206 | 108-95-3 | 53.2% | +1.5% | [-11.4, +14.5] |
+| Published, 2025 | 209 | 98-111-0 | 46.9% | -10.5% | [-23.4, +2.5] |
 
 ### By model-vs-line gap (all games)
 
 | Gap (pts) | n | W-L-P | Win % | ROI | 95% CI |
 |---|---|---|---|---|---|
-| 0-1 | 252 | 127-115-10 | 52.5% | +0.2% | [-11.4, +11.7] |
-| 1-2 | 261 | 127-126-8 | 50.2% | -4.0% | [-15.5, +7.4] |
-| 2-3 | 212 | 100-109-3 | 47.8% | -8.5% | [-21.3, +4.2] |
-| 3-5 | 220 | 102-112-6 | 47.7% | -8.8% | [-21.2, +3.7] |
-| 5-7 | 83 | 46-36-1 | 56.1% | +7.0% | [-13.4, +27.4] |
-| 7-+ | 59 | 23-35-1 | 39.7% | -23.9% | [-47.7, -0.0] |
+| 0-1 | 248 | 120-118-10 | 50.4% | -3.6% | [-15.3, +8.1] |
+| 1-2 | 261 | 124-131-6 | 48.6% | -7.0% | [-18.5, +4.5] |
+| 2-3 | 209 | 98-106-5 | 48.0% | -8.1% | [-20.9, +4.7] |
+| 3-5 | 225 | 106-114-5 | 48.2% | -7.8% | [-20.2, +4.5] |
+| 5-7 | 84 | 50-32-2 | 61.0% | +16.0% | [-3.8, +35.8] |
+| 7-+ | 60 | 23-36-1 | 39.0% | -25.2% | [-48.7, -1.6] |
 
 ### By stated EVI (all games)
 
 | EVI | n | W-L-P | Win % | ROI | 95% CI |
 |---|---|---|---|---|---|
-| <..0% | 199 | 104-88-7 | 54.2% | +3.3% | [-9.7, +16.3] |
-| 0..5% | 233 | 108-118-7 | 47.8% | -8.5% | [-20.6, +3.6] |
-| 5..10% | 208 | 98-104-6 | 48.5% | -7.2% | [-20.0, +5.6] |
-| 10..20% | 249 | 118-125-6 | 48.6% | -7.1% | [-18.9, +4.6] |
-| 20..+% | 198 | 97-98-3 | 49.7% | -5.0% | [-18.2, +8.3] |
+| <..0% | 197 | 96-93-8 | 50.8% | -2.9% | [-16.0, +10.2] |
+| 0..5% | 209 | 104-100-5 | 51.0% | -2.6% | [-15.4, +10.2] |
+| 5..10% | 195 | 91-98-6 | 48.1% | -7.8% | [-21.0, +5.4] |
+| 10..20% | 259 | 119-133-7 | 47.2% | -9.6% | [-21.1, +1.9] |
+| 20..+% | 227 | 111-113-3 | 49.6% | -5.3% | [-17.7, +7.0] |
 
-Mean stated EVI on published bets: +11.2%. Realised ROI on the same bets: -5.8%.
+Mean stated EVI on published bets: +12.0%. Realised ROI on the same bets: -5.1%.
 
 ## 3. Calibration sweep (fit 2022-23, test 2024-25)
 
@@ -53,18 +53,18 @@ Parameters minimise squared margin error on the training seasons only (accuracy,
 
 | Config | CARRY | K | HFA | Train RMSE | Test RMSE | Test MAE |
 |---|---|---|---|---|---|---|
-| Production | 0.4 | 10 | 1.8 | 12.71 | 13.10 | 10.23 |
+| Production | 0.4 | 10 | 2.15 | 12.70 | 13.10 | 10.24 |
 | Fit on 2022-23 | 0.2 | 16 | 2.15 | 12.64 | 13.12 | 10.22 |
 | Closing line (benchmark) | - | - | - | 12.28 | 12.44 | 9.67 |
 
-Residual sigma: fitted model 12.65 (train), closing line 12.27 (train); production uses 13.2.
+Residual sigma: fitted model 12.65 (train), closing line 12.27 (train); production uses 12.65.
 
 Held-out seasons (2024-25), same gate:
 
 | Slice | n | W-L-P | Win % | ROI | 95% CI |
 |---|---|---|---|---|---|
 | Published, fitted config | 424 | 207-213-4 | 49.3% | -5.9% | [-14.9, +3.2] |
-| Published, production config | 408 | 201-204-3 | 49.6% | -5.2% | [-14.5, +4.0] |
+| Published, production config | 415 | 206-206-3 | 50.0% | -4.5% | [-13.7, +4.6] |
 
 ## 4. Reading this
 
