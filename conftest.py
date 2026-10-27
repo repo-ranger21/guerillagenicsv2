@@ -1,4 +1,2 @@
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "backend"))
+# Intentionally empty: its presence at the repo root puts the root on sys.path,
+# so tests import the engine as `gg.*` (no path hacks).

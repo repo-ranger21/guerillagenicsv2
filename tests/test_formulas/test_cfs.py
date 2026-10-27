@@ -1,5 +1,4 @@
-import pytest
-from formulas.composite_futures import compute_cfs, rank_teams
+from gg.formulas.composite_futures import compute_cfs, rank_teams
 
 
 def test_compute_cfs_in_range():

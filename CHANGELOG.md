@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Retired the Supabase/FastAPI/React stack (preserved at tag `archive/pre-neon`); Neon Postgres is the database.
+- Scheduled engine run (odds -> picks -> grade) on GitHub Actions; replaces the Supabase-era nightly ingest.
+- Picks are frozen at kickoff; creating or changing a pick after kickoff raises `PickLockedError`.
+
+### Added
+- `gg grade`: final scores and settled results into `pick_results` (tracking starts NFL 2026 Week 6).
+- `gg.season`: config-driven NFL week calendar; migration `0009_game_scores.sql`.
+
 ### Added
 - Initial v2 repository scaffold
 - 10-formula prediction engine (GG-ELO, NIR, SSC, IIS, MDI, PDS, EAF, MID, MCS, CFS)

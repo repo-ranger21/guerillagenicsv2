@@ -42,7 +42,7 @@ from gg.pipeline.model import gate as gate_module
 from gg.pipeline.model.nfl import HFA, N, SIGMA, cover_probabilities, simulate_margin
 from gg.pipeline.model.shared import evi, kelly
 from gg.pipeline.snapshot import build_published_snapshot, build_skipped_snapshot
-from gg.pipeline.write import upsert_pick
+from gg.pipeline.write import PickLockedError, upsert_pick
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -88,6 +88,7 @@ class PipelineResult:
     skipped: int
     errors: list = field(default_factory=list)
     snapshots: list = field(default_factory=list)
+    locked: int = 0  # games already kicked off: left untouched by design
 
 
 def _get_git_sha() -> str | None:
@@ -129,7 +130,6 @@ def _evaluate_game(conn, game: GameForDate, game_date: date_type, evaluated_at: 
     """One game -> (write_result_dict, 'published'|'skipped'). Shared by
     run_for_date and run_for_week so there is exactly one evaluation path,
     not two copies that can drift."""
-    label = f"{game.away_abbreviation}@{game.home_abbreviation}"
 
     home_features = load_latest_team_features(conn, game.home_team_id, as_of_cutoff=game.game_time)
     away_features = load_latest_team_features(conn, game.away_team_id, as_of_cutoff=game.game_time)
@@ -273,6 +273,7 @@ def _run(games: list[GameForDate], game_date: date_type, dry_run: bool) -> Pipel
         published = 0
         skipped = 0
         errors: list[str] = []
+        locked = 0
         snapshots: list[dict] = []
         evaluated_at = datetime.now(timezone.utc)
 
@@ -286,13 +287,15 @@ def _run(games: list[GameForDate], game_date: date_type, dry_run: bool) -> Pipel
                     published += 1
                 else:
                     skipped += 1
+            except PickLockedError:
+                locked += 1
             except Exception as exc:
                 errors.append(f"{label}: {type(exc).__name__}: {exc}")
 
         _close_model_run(conn, model_run_id, evaluated, published, skipped)
         return PipelineResult(
             run_id=model_run_id, evaluated=evaluated, published=published, skipped=skipped,
-            errors=errors, snapshots=snapshots,
+            errors=errors, snapshots=snapshots, locked=locked,
         )
     finally:
         conn.close()
@@ -324,6 +327,7 @@ def run_for_week(season: int, week: int, dry_run: bool = False, sport_id: int = 
         published = 0
         skipped = 0
         errors: list[str] = []
+        locked = 0
         snapshots: list[dict] = []
         evaluated_at = datetime.now(timezone.utc)
 
@@ -338,13 +342,15 @@ def run_for_week(season: int, week: int, dry_run: bool = False, sport_id: int = 
                     published += 1
                 else:
                     skipped += 1
+            except PickLockedError:
+                locked += 1
             except Exception as exc:
                 errors.append(f"{label}: {type(exc).__name__}: {exc}")
 
         _close_model_run(conn, model_run_id, evaluated, published, skipped)
         return PipelineResult(
             run_id=model_run_id, evaluated=evaluated, published=published, skipped=skipped,
-            errors=errors, snapshots=snapshots,
+            errors=errors, snapshots=snapshots, locked=locked,
         )
     finally:
         conn.close()

@@ -1,6 +1,6 @@
 # GuerillaGenics Formula Reference
 
-All formulas live in `backend/formulas/`. Every score is normalized to **0–100** before being passed to CFS unless noted.
+All formulas live in `gg/formulas/`. Every score is normalized to **0–100** before being passed to CFS unless noted.
 
 ---
 

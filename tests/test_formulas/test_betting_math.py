@@ -1,8 +1,7 @@
 """Shared-vector parity test (Python side).
 
-Runs shared/betting_vectors.json against backend/formulas/betting_math.py.
-The vitest suite in frontend/src/utils/bettingMath.test.ts runs the SAME file
-against the JS mirror. If either implementation drifts, that side goes red.
+Runs shared/betting_vectors.json against gg/formulas/betting_math.py.
+Any other implementation of this math must run the SAME file.
 """
 
 import json
@@ -11,7 +10,7 @@ import pathlib
 
 import pytest
 
-from formulas import betting_math as bm
+from gg.formulas import betting_math as bm
 
 # tests/test_formulas/<file> — parents[2] is the repo root.
 _VECTORS = json.loads(

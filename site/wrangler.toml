@@ -1,0 +1,7 @@
+name = "guerillagenics-site"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "."
+
+# Secret (set in Cloudflare Pages -> Settings -> Variables, or `wrangler pages secret put`):
+#   DATABASE_URL_READONLY  = Neon connection string for role gg_site_reader
+# This role can SELECT from public.public_pick_feed and public.public_ledger only.

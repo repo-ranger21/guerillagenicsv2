@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GuerillaGenics — Show Your Math</title>
+  <meta name="description" content="NFL pick analytics where every pick ships with its formula, its Kelly size and its result — including the losses.">
+  <meta name="theme-color" content="#100E09">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="mast">
+    <div class="wrap mast-row">
+      <span class="brand">GUERILLAGENICS</span>
+      <span class="stamp" aria-label="Status">FILE OPEN · NFL 2026</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <p class="eyebrow">Explainable · Auditable · Actionable</p>
+      <h1>Show your math.</h1>
+      <p class="lede">Every pick ships with its formula, its Kelly size and its result — including the losses. No black boxes, no highlight reels.</p>
+      <div class="cta-row">
+        <a id="subscribe" class="btn btn-primary" hidden>Get the weekly EAA Breakdown</a>
+        <a class="btn" href="#ledger">See the ledger</a>
+      </div>
+    </section>
+
+    <section class="wrap eaa" aria-label="The EAA standard">
+      <div><h2>Explainable</h2><p>Every number has a plain-language reason attached.</p></div>
+      <div><h2>Auditable</h2><p>Picks are logged with a timestamp before kickoff, and the raw audit data is one click away.</p></div>
+      <div><h2>Actionable</h2><p>Every pick carries a price, a model edge and a fractional-Kelly stake. If it has no stake, it is commentary.</p></div>
+    </section>
+
+    <section class="wrap" id="latest" aria-labelledby="latest-h">
+      <div class="sec-head">
+        <h2 id="latest-h">Latest published pick</h2>
+        <p class="note">Picks appear here after kickoff, once the market has closed.</p>
+      </div>
+      <div id="latest-body" class="card" aria-live="polite"><p class="muted">Loading…</p></div>
+    </section>
+
+    <section class="wrap" id="ledger" aria-labelledby="ledger-h">
+      <div class="sec-head">
+        <h2 id="ledger-h">The ledger</h2>
+        <p class="note">Every graded pick, wins and losses, with the post-mortem on each miss.</p>
+      </div>
+      <div id="ledger-stats" class="stats" aria-live="polite"></div>
+      <div id="ledger-body" aria-live="polite"><p class="muted">Loading…</p></div>
+    </section>
+
+    <section class="wrap" id="limits" aria-labelledby="limits-h">
+      <div class="sec-head"><h2 id="limits-h">What we don't claim</h2></div>
+      <div class="card limits">
+        <ul>
+          <li>The model does not currently beat closing lines. We publish anyway, because the process is the product.</li>
+          <li>Weeks 1–5 of the 2026 season were a testing phase. They are not in the ledger.</li>
+          <li>Nothing here is a guarantee. Past results do not predict future results.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <p>For adults 21+. Educational analytics, not financial or betting advice. If gambling is a problem for you or someone you know, call 1-800-GAMBLER.</p>
+      <p class="muted">© GuerillaGenics</p>
+    </div>
+  </footer>
+
+  <script src="/config.js"></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>

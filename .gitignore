@@ -41,9 +41,6 @@ venv.bak/
 .env.test
 .env.production
 .env.staging
-backend/.env
-frontend/.env
-frontend/.env.*
 
 # pytest
 .pytest_cache/
@@ -66,7 +63,6 @@ dmypy.json
 
 # Node / Frontend
 node_modules/
-frontend/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -75,8 +71,6 @@ pnpm-debug.log*
 .yarn-integrity
 
 # Build outputs
-frontend/dist/
-frontend/.vite/
 *.local
 data/raw/
 *.zip
@@ -132,3 +126,19 @@ requirements_current.txt
 # Claude Code local state
 .claude/
 .neon
+
+# Keep the committed template
+!.env.example
+
+# Local tooling (not part of the product)
+.agents/
+.mcp.json
+skills-lock.json
+*.code-workspace
+supabase/
+hello.ts
+workspace_tree_*.txt
+requirements_current.txt
+
+# Generated spreadsheets (CSV snapshots are the record)
+snapshots/**/*.xlsx
