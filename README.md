@@ -1,92 +1,51 @@
 # GuerillaGenics
 
-**Show your math.** A sports-betting analytics platform where every pick is
-Explainable, Auditable and Actionable (EAA) — and every result, including the
-misses, is public. Live at https://guerillagenics.app.
+**Show your math.** A sports-betting analytics engine where every pick is
+Explainable, Auditable and Actionable (EAA), and every result, including the
+misses, goes in a public ledger.
 
-The model does **not** beat closing lines today. That is disclosed on the site;
-the point of the project is a record anyone can audit, not a claim nobody can.
+## Status
 
-## How it fits together
+- The engine (`gg/`) pulls lines, evaluates NFL spread picks, locks them at kickoff
+  and grades them, on a daily schedule, against Neon Postgres.
+- **The model does not beat closing lines.** Walk-forward backtests over 1,087
+  games (2022-2025) show no demonstrated edge. The project's value today is a record
+  anyone can audit, not a claim nobody can. Details: [docs/BACKTESTS.md](docs/BACKTESTS.md).
+- Public tracking starts with NFL 2026 Week 6. Earlier weeks were testing and are not recorded.
+- The new public site is in `site/`. As of 2026-10-27 the domain guerillagenics.app still
+  serves the previous site until Cloudflare Pages is repointed (see [docs/OPERATIONS.md](docs/OPERATIONS.md)).
 
-```
- GitHub Actions (daily cron)
-   python -m gg.cli odds   ──►  lines          ┐
-   python -m gg.cli --current ► picks          ├─►  Neon Postgres
-   python -m gg.cli grade  ──►  scores+results ┘      picks_daily, pick_results,
-                                                      model_runs, ingest_runs, ...
-                                                            │  (only via 2 views,
-                                                            │   read-only role gg_site_reader)
-                                                            ▼
-                              Cloudflare Pages  site/  +  site/functions/api/*
-```
+## Documentation
 
-Three rules keep it honest:
-
-1. **Only the engine writes.** `gg/` is the sole writer of `picks_daily` and `pick_results`.
-2. **Only two views are public.** `public_pick_feed` (a pick appears only after its game kicks off) and `public_ledger`.
-3. **Python owns the math.** The site never recomputes anything.
-
-Pick integrity is enforced in code, not by convention:
-
-- A pick can only be created or changed **before kickoff** (`PickLockedError`; no override flag).
-- Grading ignores anything before the tracking start (**NFL 2026 Week 6**), picks logged after kickoff, and skipped rows.
-- Every loss carries a post-mortem (database constraint); the automatic one states the miss from stored numbers.
-
-## Layout
-
-| Path | What it is |
+| Read this | For |
 |---|---|
-| `gg/` | The engine: `cli.py`, `season.py`, `pipeline/` (odds, features, model, run, write, grade) |
-| `gg/formulas`, `gg/utils` | Shared betting math (Kelly, EVI, Elo, ...) used by the pipeline |
-| `db/migrations/` | Neon schema, applied by hand in the Neon SQL editor, in order |
-| `site/` | Static landing page + Pages Functions (see `site/README.md`) |
-| `shared/betting_vectors.json` | Reference vectors the Python tests check |
-| `tests/` | pytest suite (math, grading, season calendar, kickoff lock, schema contract) |
-| `docs/` | Methodology notes; the futures-era docs are legacy |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the pieces fit, the data model, the integrity rules |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Setup, secrets, schedules, weekly routine, troubleshooting |
+| [docs/METHODOLOGY.md](docs/METHODOLOGY.md) | The model, the gate, and what each constant is based on |
+| [docs/BACKTESTS.md](docs/BACKTESTS.md) | Results, how to reproduce them, how they were validated |
+| [site/README.md](site/README.md) | The public landing page and its two API functions |
 
-The previous Supabase/FastAPI/React platform is preserved at the git tag
-`archive/pre-neon`.
+`docs/` also holds futures-era documents (`FORMULAS.md`, `NEEDLE_CRITERIA.md`,
+`DATA_SOURCES.md`, the field table in `EAA_STANDARD.md`). They are legacy.
 
-## Run locally
+## Quick start
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate      # Python 3.11-3.13
 pip install -r requirements.txt
-cp .env.example .env.local        # DATABASE_URL (Neon), ODDS_API_KEY
-pytest tests/ && ruff check gg/ tests/
+cp .env.example .env.local                             # DATABASE_URL, ODDS_API_KEY
+pytest tests/ && ruff check gg/ tests/ scripts/
 
-python -m gg.cli odds --dry-run
-python -m gg.cli --current --dry-run
-python -m gg.cli grade --dry-run
+python -m gg.cli --current --dry-run                   # evaluate this week's picks, write nothing
 ```
 
-`--dry-run` executes every statement against the real database and then rolls
-back, so it proves the writes would succeed without keeping them.
+## Check the claims yourself
 
-## Configuration
-
-| Variable | Used by |
-|---|---|
-| `DATABASE_URL` | engine (full rights), GitHub secret |
-| `ODDS_API_KEY` | odds + scores, GitHub secret |
-| `SLACK_WEBHOOK` | optional failure alert, GitHub secret |
-| `DATABASE_URL_READONLY` | Cloudflare Pages secret (`gg_site_reader`) |
-
-Each season needs one line in `gg/season.py` (`WEEK1_TUESDAY`). The scheduled
-job stays quiet outside configured seasons.
+```bash
+python scripts/backtest_nfl.py                         # regenerates docs/BACKTEST_NFL.md
+python -m gg.cli snapshot-week --verify                # frozen weekly stats still match their hashes
+```
 
 ## License
 
-See `LICENSE`.
-
-## Weekly stats snapshots
-
-Every Tuesday (after Monday Night Football) `GG Weekly Snapshot` freezes the finished week
-under `snapshots/<season>/week_<WW>/`: team and player stats for the week, season-to-date
-totals, the model's team ratings, games with closing spreads, and a `MANIFEST.json` of sha256
-hashes. A week is write-once; `python -m gg.cli snapshot-week --verify` flags any edit.
-Weeks 1-6 of 2026 are `kind: backfill` (rebuilt from nflverse after the fact). The spreadsheet
-`GG_<season>_W<WW>_Snapshot.xlsx` is a generated view, attached to each workflow run.
-
-Backtest of the model: [docs/BACKTEST_NFL.md](docs/BACKTEST_NFL.md) (`python scripts/backtest_nfl.py`).
+See `LICENSE`. The previous Supabase/FastAPI/React platform is preserved at the git tag `archive/pre-neon`.
