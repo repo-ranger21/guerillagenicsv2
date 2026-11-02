@@ -80,6 +80,13 @@ def latest_completed_week(games: pd.DataFrame, season: int) -> int | None:
     return w or None
 
 
+def snapshot_kind(week: int, latest_completed: int | None, backfill: bool) -> str:
+    """"live" only for the most recent completed week, frozen as part of the normal
+    cycle. Anything frozen later (an older week, or an explicit --backfill) is rebuilt
+    from current upstream data and must say so."""
+    return "live" if (not backfill and latest_completed is not None and week == latest_completed) else "backfill"
+
+
 def sha256_file(path: str) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as fh:

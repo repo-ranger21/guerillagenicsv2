@@ -61,3 +61,10 @@ def test_freeze_is_write_once_and_verifiable(tmp_path):
     assert any("team_week.csv" in p for p in ws.verify_week(2026, 1, root=root))
     ws.freeze_week(2026, 1, root=root, data=_tiny_data(), force=True)
     assert ws.verify_week(2026, 1, root=root) == []
+
+
+def test_snapshot_kind_is_live_only_for_the_latest_completed_week():
+    assert ws.snapshot_kind(8, 8, backfill=False) == "live"
+    assert ws.snapshot_kind(7, 8, backfill=False) == "backfill"  # frozen late
+    assert ws.snapshot_kind(8, 8, backfill=True) == "backfill"
+    assert ws.snapshot_kind(1, None, backfill=False) == "backfill"
