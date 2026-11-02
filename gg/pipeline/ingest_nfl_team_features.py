@@ -38,8 +38,8 @@ from dotenv import load_dotenv
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
-from gg.pipeline.model.nfl import CARRY, K
-from gg.pipeline.nfl_ratings import compute_all_ratings, fetch_play_by_play, filter_regular_season
+from gg.pipeline.model.nfl import CARRY, K  # noqa: E402
+from gg.pipeline.nfl_ratings import compute_all_ratings, fetch_play_by_play, filter_regular_season  # noqa: E402
 
 SOURCE = "nflfastr"
 SPORT = "nfl"

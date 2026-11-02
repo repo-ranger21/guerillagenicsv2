@@ -1,5 +1,4 @@
-import pytest
-from formulas.momentum_decay import compute_mdi, compute_mdi_batch
+from gg.formulas.momentum_decay import compute_mdi, compute_mdi_batch
 
 
 def make_results(wins: list[bool], margins: list[int]) -> list[dict]:

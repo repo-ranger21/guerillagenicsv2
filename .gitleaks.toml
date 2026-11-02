@@ -1,51 +1,39 @@
+title = "GuerillaGenics gitleaks config"
+
 [extend]
 useDefault = true
 
 [allowlist]
-description = "GuerillaGenics allowlist"
+description = "Placeholders and docs"
 paths = [
-    "docs/",
-    ".env.example",
-    "backend/.env.example",
-    "frontend/.env.example",
-    "CHANGELOG.md",
+    '''docs/''',
+    '''\.env\.example$''',
+    '''CHANGELOG\.md$''',
 ]
 regexes = [
-    # Allow placeholder values in example files
-    "YOUR_.*_HERE",
-    "REPLACE_WITH_.*",
-    "\\$\\{.*\\}",
+    '''YOUR_.*_HERE''',
+    '''REPLACE_WITH_.*''',
+    '''\$\{.*\}''',
+    '''postgres(ql)?://placeholder:placeholder@''',
 ]
-
-[[rules]]
-id = "supabase-service-key"
-description = "Supabase service role key"
-regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'''
-tags = ["supabase", "jwt", "secret"]
 
 [[rules]]
 id = "odds-api-key"
-description = "The Odds API key"
-regex = '''[a-f0-9]{32}'''
+description = "The Odds API key assigned to a variable"
+regex = '''(?i)odds[_-]?api[_-]?key["']?\s*[:=]\s*["']?[a-f0-9]{32}\b'''
+keywords = ["odds"]
 tags = ["odds-api", "api-key"]
-[rules.allowlist]
-paths = [".env.example", "backend/.env.example"]
 
 [[rules]]
-id = "gcp-project-id"
-description = "GCP Project ID in env files"
-regex = '''GCP_PROJECT_ID\s*=\s*[a-z][a-z0-9\-]{5,29}'''
-tags = ["gcp"]
-[rules.allowlist]
-paths = [".env.example", "backend/.env.example", "docs/"]
+id = "neon-connection-string"
+description = "Neon Postgres connection string with credentials"
+regex = '''postgres(?:ql)?://[^:\s/]+:[^@\s]+@[^\s/]*neon\.tech'''
+keywords = ["neon.tech"]
+tags = ["neon", "database", "secret"]
 
 [[rules]]
 id = "cloudflare-api-token"
-description = "Cloudflare API token"
-regex = '''[A-Za-z0-9_\-]{40}'''
+description = "Cloudflare API token assigned to a variable"
+regex = '''(?i)cloudflare[\w-]*(?:token|key)["']?\s*[:=]\s*["']?[A-Za-z0-9_\-]{40}\b'''
+keywords = ["cloudflare"]
 tags = ["cloudflare"]
-[rules.allowlist]
-paths = [".env.example"]
-
-[allowlist.commits]
-# Add commit SHAs here if needed to skip historical scanning

@@ -8,41 +8,40 @@ current-season team ratings, and these constants must live in exactly
 one place with their provenance stated honestly — not scattered or
 guessed at the point of use.
 
-Provenance, stated plainly rather than aspirationally:
+Provenance (backtest: scripts/backtest_nfl.py -> docs/BACKTEST_NFL.md,
+1,087 regular-season games 2022-2025, walk-forward, no lookahead):
 
-  SIGMA, HFA   — taken from examples/gg_sim.py, the working NFL spread
-                 Monte Carlo already in this repo (NFL_MARGIN_SIGMA,
-                 HOME_FIELD_PTS), and confirmed against the project's
-                 own skill doc ("HFA ≈ 1.8, compressed post-2020";
-                 "σ ≈ 13.2"). This is the only pair of values actually
-                 grounded in this codebase.
+  HFA = 2.15   — best-fitting home-field value on the 2022-23 training
+                 seasons (grid 0.0-2.5). It replaces 1.8 from
+                 examples/gg_sim.py. Margin error is flat across 1.8-2.5,
+                 so this is a calibration tidy-up, not a source of edge.
 
-  CARRY, K     — PROVISIONAL. Nothing in this repo computes or has ever
-                 used these two constants. There is no walk-forward
-                 backtest over 1,087 games (2022-2025) anywhere in this
-                 codebase: scripts/backtest.py and scripts/calibrate.py
-                 both backtest a different model entirely (CFS
-                 championship-futures Brier score / ROI, not NFL
-                 spreads), pull from model_snapshots, and silently fall
-                 back to fabricated synthetic data when no real record
-                 exists. Do not cite that file as this pair's source.
-                 CARRY=0.40 / K=10 are used here because the task asked
-                 for them as a starting point, not because they have
-                 been validated against real results. Real calibration
-                 is a separate, later task.
+  SIGMA = 12.65 — residual std dev of (final margin - model margin) on the
+                 training seasons. The closing line's own residual is 12.27;
+                 the old 13.2 overstated spread and so understated how
+                 confident the model's own cover probabilities were.
+
+  CARRY, K     — 0.40 / 10 kept. The fitted pair (0.2 / 16) scored the
+                 same out of sample (test RMSE 13.12 vs 13.10), i.e. the
+                 optimum is flat; changing them would be noise-chasing.
+
+WHAT THE BACKTEST DOES NOT SHOW: edge. The model is less accurate than the
+closing line (MAE 10.00 vs 9.49), and its disagreement with the line has no
+significant predictive value (t = -0.52). Published bets went 402-408-20
+(-5.1% ROI at flat -110). Stated EVI is therefore an unvalidated model
+output, not a measured advantage. Do not describe it as an edge.
 
   N            — 100,000 simulations. Matches examples/gg_sim.py and
                  the convergence-check pattern already proven there.
 
-Do not change these values casually. If SIGMA/HFA drift from
-examples/gg_sim.py, or CARRY/K get a real backtest, update the
-provenance note above in the same commit as the number.
+Do not change these values casually. Re-run scripts/backtest_nfl.py and
+update the provenance note above in the same commit as any number.
 """
 
-CARRY = 0.40   # between-season regression toward mean — PROVISIONAL, see module docstring
-K = 10         # within-season shrinkage constant     — PROVISIONAL, see module docstring
-HFA = 1.8      # empirical home field, post-2020 compression — from examples/gg_sim.py
-SIGMA = 13.2   # residual std dev of NFL final margins        — from examples/gg_sim.py
+CARRY = 0.40   # between-season regression toward mean — flat optimum, see docstring
+K = 10         # within-season shrinkage constant     — flat optimum, see docstring
+HFA = 2.15     # best fit on 2022-23 walk-forward; see module docstring
+SIGMA = 12.65  # residual std dev of model margin errors (2022-23 fit); see docstring
 N = 100_000    # simulations; convergence-checked vs closed form in examples/gg_sim.py
 
 # Known limitation, carried forward from examples/gg_sim.py and the project
@@ -53,7 +52,7 @@ N = 100_000    # simulations; convergence-checked vs closed form in examples/gg_
 # that would fix it.
 
 
-import numpy as np
+import numpy as np  # noqa: E402
 
 
 def simulate_margin(edge_pts: float, sigma: float, n: int, seed: int) -> np.ndarray:

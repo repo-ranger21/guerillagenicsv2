@@ -22,6 +22,17 @@ from __future__ import annotations
 
 from gg.pipeline.snapshot import PickSnapshot
 
+
+class PickLockedError(RuntimeError):
+    """The game has kicked off, so its pick is frozen.
+
+    Integrity rule: a pick may only be created or changed BEFORE kickoff.
+    public_pick_feed shows a pick once its game has started, so a row
+    written after kickoff would be indistinguishable from a pre-game call,
+    and a re-run would overwrite logged_at (the pick's lock time). There is
+    deliberately no override flag.
+    """
+
 _UPSERT_SQL = """
 insert into public.picks_daily
   (slug, game_date, sport, game_id, model_run_id, pick, game, game_time, odds,
@@ -100,6 +111,11 @@ def upsert_pick(conn, snapshot: PickSnapshot, model_run_id: int, dry_run: bool) 
     params = _params(snapshot, model_run_id)
 
     with conn.cursor() as cur:
+        cur.execute("select game_time <= now() from public.games where id = %s", (snapshot.game_id,))
+        started = cur.fetchone()
+        if started is not None and started[0]:
+            conn.rollback()
+            raise PickLockedError(f"game_id={snapshot.game_id} has kicked off; pick is frozen")
         cur.execute(_UPSERT_SQL, params)
         row = cur.fetchone()
 

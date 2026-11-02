@@ -1,5 +1,4 @@
-import pytest
-from formulas.net_impact_rating import compute_nir, normalize_nir_to_score, compute_nir_batch
+from gg.formulas.net_impact_rating import compute_nir, normalize_nir_to_score, compute_nir_batch
 
 
 def test_positive_net_rating():

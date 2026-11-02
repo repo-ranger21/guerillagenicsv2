@@ -57,7 +57,7 @@ Include: season(s) tested, accuracy metric before/after, number of championships
 
 ## Acceptance criteria
 
-- [ ] `pytest backend/tests/test_formulas/` passes
+- [ ] `pytest tests/test_formulas/` passes
 - [ ] Backtest accuracy >= current baseline (see docs/BACKTEST_RESULTS.md)
 - [ ] docs/FORMULAS.md updated
 - [ ] CHANGELOG.md updated

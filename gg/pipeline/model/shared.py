@@ -1,7 +1,7 @@
 """Sport-agnostic betting math: american_to_profit, evi, kelly.
 
 `american_to_profit` is NOT reimplemented here — it re-exports
-backend/formulas/betting_math.am_to_decimal, the repo's existing
+gg/formulas/betting_math.am_to_decimal, the repo's existing
 canonical conversion (policed by shared/betting_vectors.json against
 pytest AND the frontend's vitest mirror, per that module's own
 docstring). Reimplementing it here would be exactly the kind of drift
@@ -11,7 +11,7 @@ zero reason to differ.
 evi/kelly ARE new here, not a rename of betting_math's same-named
 functions — and that's deliberate, not an accident of naming:
 
-  backend/formulas/betting_math.evi / .kelly   — two-outcome (p, 1-p).
+  gg/formulas/betting_math.evi / .kelly   — two-outcome (p, 1-p).
     Correct for moneylines and futures, where there is no push.
 
   gg.pipeline.model.shared.evi / .kelly (below) — three-outcome
@@ -27,14 +27,7 @@ Same names, different modules, different bet shapes. Not duplication.
 
 from __future__ import annotations
 
-import os
-import sys
-
-_BACKEND_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "backend")
-if _BACKEND_DIR not in sys.path:
-    sys.path.insert(0, _BACKEND_DIR)
-
-from formulas.betting_math import am_to_decimal as american_to_profit  # noqa: E402
+from gg.formulas.betting_math import am_to_decimal as american_to_profit
 
 
 def evi(p_win: float, p_push: float, p_loss: float, odds: int) -> float:

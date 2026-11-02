@@ -4,44 +4,38 @@ gg/pipeline/model/gate.py
 Decides whether a modeled edge is publishable. Pure functions — numbers in,
 a decision out. No I/O.
 
-NOT CALIBRATED (corrected 2026-10-04): this module's constants were
-previously documented as "derived from backtest.py over 1,058 decided
-games, 2022-2025, walk-forward with no lookahead," with a specific sweep
-table for MAX_DISAGREEMENT_PTS. That provenance claim does not hold up:
-no backtest.py or any script containing those numbers exists anywhere in
-this repo, and the live DB has no historical outcome data to have produced
-them from (games.status is always 'scheduled', no score columns exist,
-and the DB only covers the 2026 season -- 2022-2025 "decided games" are
-not present here in any form). Do not cite the sweep table below as a
-real backtest result until one actually exists. Treat MAX_DISAGREEMENT_PTS
-the same as MAX_KELLY_PCT and MIN_EVI_PCT: a judgment call, not a
-validated threshold. (Separately, a real sign-convention bug in how
-run.py called gate() -- market_line was passed in the opposite sign
-convention from this docstring's "positive = home favored" -- was found
-and fixed the same day; that fix is independent of this provenance issue
-and does not resolve it.)
+BACKTESTED, AND NO CONFIGURATION SHOWS EDGE (2026-10-23): scripts/backtest_nfl.py
+(results in docs/BACKTEST_NFL.md) replays this exact gate over 1,087 games,
+2022-2025, walk-forward, flat -110 against the closing spread.
+
+  - Published bets: 402-408-20, 49.6% wins, -5.1% ROI (95% CI -11.5 to +1.3).
+  - Gap > 7 pts: 23-36-1, -25.2% ROI. The cap is directionally supported:
+    a large disagreement with the line is the model missing information.
+  - Gaps below 7 are not distinguishable from coin flips; no EVI bucket
+    clears break-even, and realised ROI does not rise with stated EVI.
+  - Mean stated EVI on published bets was +12.0% against -5.1% realised.
+
+So the gate is a risk filter, not an edge finder. It keeps the model from
+publishing its worst-looking disagreements; it does not make the remaining
+picks profitable. (An earlier docstring cited a sweep table from a
+"backtest.py" that never existed in this repo; that table is gone.)
 """
 from dataclasses import dataclass
 from typing import Literal
 
 # --- constants -----------------------------------------------------------
-# UNVERIFIED sweep table (see module docstring -- no backtest script or
-# outcome data backing this was found in the repo as of 2026-10-04):
-#     gap <= 7  ->  n=997  49.85% ATS
-#     gap >  7  ->  n= 61  40.98% ATS   (-21.76% ROI)
-#     gap >  8  ->  n= 42  35.71% ATS   (-31.82% ROI)
-# 7.0 is kept as the operating threshold (it's a reasonable-sounding
-# judgment call, not a disproven one) but is NOT CALIBRATED.
-MAX_DISAGREEMENT_PTS = 7.0  # NOT CALIBRATED -- judgment call, see docstring above
+# Backtest by |model - line| gap (docs/BACKTEST_NFL.md): 5-7 pts 50-32-2 (+16.0% ROI,
+# CI spans zero); 7+ pts 23-36-1 (-25.2% ROI). 7.0 is kept as a risk cap.
+MAX_DISAGREEMENT_PTS = 7.0  # risk cap, supported by backtest on the high side only
 
 # Kelly assumes you know the true probability. We demonstrably do not —
 # the model trails closing lines by ~1.8 pts of mean absolute error.
 # Ceiling is a judgment call, not a derived one. Stated, not hidden.
 MAX_KELLY_PCT = 2.5
 
-# EVI publish floor. NOT CALIBRATED. No backtest bucket cleared break-even,
-# so there is no evidence-based floor to set. Held at 0.0 so it filters
-# nothing silently. Revisit only with evidence.
+# EVI publish floor. The backtest found no EVI bucket that clears break-even
+# and no rise in realised ROI with stated EVI, so there is no evidence-based
+# floor to set. Held at 0.0 so it filters nothing silently.
 MIN_EVI_PCT = 0.0
 
 Status = Literal[
@@ -99,10 +93,9 @@ def gate(
         return Decision(
             "skipped_model_uncertainty",
             f"model disagrees with market by {gap:.1f} pts "
-            f"(cap {MAX_DISAGREEMENT_PTS:.0f}, NOT CALIBRATED -- judgment "
-            f"call, no validated backtest behind this threshold; see module "
-            f"docstring). Large disagreement indicates missing information, "
-            f"not edge.",
+            f"(cap {MAX_DISAGREEMENT_PTS:.0f}; gaps above it went 23-36-1 in "
+            f"the 2022-25 backtest). Large disagreement indicates missing "
+            f"information, not edge.",
             0.0, kelly_pct, tuple(flags))
 
     if evi_pct <= MIN_EVI_PCT:

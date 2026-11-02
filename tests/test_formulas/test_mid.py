@@ -1,5 +1,5 @@
 import pytest
-from formulas.market_inefficiency import compute_mid, classify_tier, NEEDLE_THRESHOLD
+from gg.formulas.market_inefficiency import compute_mid, classify_tier, NEEDLE_THRESHOLD
 
 
 def make_odds_map(odds: int) -> dict:
