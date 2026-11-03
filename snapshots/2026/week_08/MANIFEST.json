@@ -1,0 +1,50 @@
+{
+  "season": 2026,
+  "week": 8,
+  "kind": "live",
+  "created_utc": "2026-11-03T18:06:55+00:00",
+  "git_commit": "bda547fdd80a6feed3c45d7b41fa1681bd005642",
+  "model": {
+    "carry": 0.4,
+    "k": 10
+  },
+  "sources": {
+    "games": "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv",
+    "team_stats": "https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2026.parquet",
+    "player_stats": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2026.parquet",
+    "play_by_play": [
+      "nflverse pbp 2025",
+      "nflverse pbp 2026"
+    ]
+  },
+  "files": {
+    "games.csv": {
+      "sha256": "b3f57400df421f93a31862b37b626538eb3a9dddb0052b903ae5a394c606106e",
+      "bytes": 15159
+    },
+    "ledger.csv": {
+      "sha256": "547de083dc4ec10e79a4f7c75f58c0124a7b7427b94ec3af02569257615cf150",
+      "bytes": 134
+    },
+    "player_to_date.csv": {
+      "sha256": "88a54a2f24b2d7ce1388cc795e89a4688b6cc76eb0edb6cff63862da191208e7",
+      "bytes": 532438
+    },
+    "player_week.csv": {
+      "sha256": "5b5d93d5fbb4f0d3b157679b9c0598c05b5825bed7d736f2dbf8afc6c9c7ff1c",
+      "bytes": 360168
+    },
+    "ratings.csv": {
+      "sha256": "78e38ecbe31ac61f2a61a5f815598acefe8cc98fb27baca874d16bb94ae32ca5",
+      "bytes": 4230
+    },
+    "team_to_date.csv": {
+      "sha256": "dc1f09127bede86047fd96c574b0c16b9caacaae92f4eb4028cfb22ecffca7ac",
+      "bytes": 14074
+    },
+    "team_week.csv": {
+      "sha256": "5f264dca939b4b2680997c9b0adedfb665674447904a55a652e027f64186e9bd",
+      "bytes": 13663
+    }
+  }
+}
