@@ -20,6 +20,31 @@ WEEK1_TUESDAY: dict[int, date] = {
 
 MAX_REGULAR_SEASON_WEEK = 18
 
+# Games played at a neutral site (the International Series). The designated
+# "home" team has no home crowd there, so the model must not add home-field
+# advantage. Keyed by season; each entry is (home, away) in database
+# abbreviations. Source: nflverse games.csv rows with location == "Neutral".
+# Add a season's entries when its schedule is released; a missed entry means the
+# model silently gives one team a home edge it does not have.
+NEUTRAL_SITE_GAMES: dict[int, frozenset[tuple[str, str]]] = {
+    2026: frozenset({
+        ("LAR", "SF"),   # wk 1  Melbourne
+        ("DAL", "BAL"),  # wk 3  Rio de Janeiro
+        ("WAS", "IND"),  # wk 4  London (Tottenham)
+        ("JAX", "PHI"),  # wk 5  London (Tottenham)
+        ("JAX", "HOU"),  # wk 6  London (Wembley)
+        ("NO", "PIT"),   # wk 7  Paris
+        ("ATL", "CIN"),  # wk 9  Madrid
+        ("DET", "NE"),   # wk 10 Munich
+        ("SF", "MIN"),   # wk 11 Mexico City
+    }),
+}
+
+
+def is_neutral_site(season: int, home_abbr: str, away_abbr: str) -> bool:
+    """True if this game is played at a neutral site (no home-field advantage)."""
+    return (home_abbr, away_abbr) in NEUTRAL_SITE_GAMES.get(season, frozenset())
+
 
 def current_season_week(today: date) -> tuple[int, int]:
     """(season, week) for `today` (an America/New_York date).

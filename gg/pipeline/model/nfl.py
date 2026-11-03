@@ -27,7 +27,7 @@ Provenance (backtest: scripts/backtest_nfl.py -> docs/BACKTEST_NFL.md,
 
 WHAT THE BACKTEST DOES NOT SHOW: edge. The model is less accurate than the
 closing line (MAE 10.00 vs 9.49), and its disagreement with the line has no
-significant predictive value (t = -0.52). Published bets went 402-408-20
+significant predictive value (t = -0.52). Published bets went 404-410-20
 (-5.1% ROI at flat -110). Stated EVI is therefore an unvalidated model
 output, not a measured advantage. Do not describe it as an edge.
 
@@ -53,6 +53,12 @@ N = 100_000    # simulations; convergence-checked vs closed form in examples/gg_
 
 
 import numpy as np  # noqa: E402
+
+
+def home_field_advantage(neutral_site: bool) -> float:
+    """Points added to the home team's margin. Zero at a neutral site: the
+    designated home team has no home crowd, travel edge or familiar field."""
+    return 0.0 if neutral_site else HFA
 
 
 def simulate_margin(edge_pts: float, sigma: float, n: int, seed: int) -> np.ndarray:

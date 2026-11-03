@@ -99,6 +99,7 @@ def build_features(cache: str) -> pd.DataFrame:
         ca, ga = current(s, w, a)
         recs.append(dict(
             season=s, week=w, home=h, away=a, spread=float(r.spread_line),
+            neutral=float(r.location == "Neutral"),
             result=float(r.home_score - r.away_score),
             rp_h=prior[s].get(h, prior_mean[s]), rp_a=prior[s].get(a, prior_mean[s]),
             lm=prior_mean[s], rc_h=ch, rc_a=ca, gp_h=gh, gp_a=ga))
@@ -109,7 +110,8 @@ def model_margin(df: pd.DataFrame, carry: float, k: float, hfa: float) -> np.nda
     def blend(rp, rc, gp):
         w = gp / (gp + k)
         return w * rc + (1 - w) * (carry * rp + (1 - carry) * df.lm)
-    return (blend(df.rp_h, df.rc_h, df.gp_h) - blend(df.rp_a, df.rc_a, df.gp_a) + hfa).to_numpy()
+    neutral = df["neutral"] if "neutral" in df else 0.0  # no home-field advantage at neutral sites
+    return (blend(df.rp_h, df.rc_h, df.gp_h) - blend(df.rp_a, df.rc_a, df.gp_a) + hfa * (1 - neutral)).to_numpy()
 
 
 def check_blend_matches_production(df: pd.DataFrame) -> None:
