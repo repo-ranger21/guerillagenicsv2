@@ -107,7 +107,7 @@ def _cmd_snapshot_week(argv: list[str]) -> int:
         if exists and not args.force:
             print(f"snapshot week {w}: already frozen, skipped")
             continue
-        kind = "live" if w == week and not args.backfill else "backfill"
+        kind = ws.snapshot_kind(w, ws.latest_completed_week(games, args.season), args.backfill)
         out = ws.freeze_week(args.season, w, kind=kind, force=args.force, data=data)
         print(f"snapshot week {w}: frozen ({kind}) -> {out}")
     if not args.no_xlsx:
