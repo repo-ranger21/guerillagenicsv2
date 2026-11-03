@@ -39,10 +39,11 @@ from gg.pipeline.load import (
     load_latest_team_features,
 )
 from gg.pipeline.model import gate as gate_module
-from gg.pipeline.model.nfl import HFA, N, SIGMA, cover_probabilities, simulate_margin
+from gg.pipeline.model.nfl import N, SIGMA, cover_probabilities, home_field_advantage, simulate_margin
 from gg.pipeline.model.shared import evi, kelly
 from gg.pipeline.snapshot import build_published_snapshot, build_skipped_snapshot
 from gg.pipeline.write import PickLockedError, upsert_pick
+from gg.season import is_neutral_site
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -69,6 +70,13 @@ KNOWN_QB_CHANGES: dict[str, str] = {
     # (mean -1.28 pts, SE 0.65, n=345). Annotation only, does not touch model_margin.
     "TB": "qb_change:daniels_for_mayfield(2026wk4)",
 }
+
+
+NEUTRAL_SITE_FLAG = "NEUTRAL_SITE_NO_HFA"
+
+
+def _neutral_flags(neutral: bool, flags: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(flags) + ((NEUTRAL_SITE_FLAG,) if neutral else ())
 
 
 def _with_known_qb_flags(game: GameForDate, flags: tuple[str, ...]) -> tuple[str, ...]:
@@ -167,7 +175,9 @@ def _evaluate_game(conn, game: GameForDate, game_date: date_type, evaluated_at: 
 
     bet_rating = float(home_features.rating_pts_per_game)
     opp_rating = float(away_features.rating_pts_per_game)
-    model_margin_home = (bet_rating - opp_rating) + HFA
+    neutral = is_neutral_site(game.season, game.home_abbreviation, game.away_abbreviation)
+    hfa = home_field_advantage(neutral)
+    model_margin_home = (bet_rating - opp_rating) + hfa
 
     margins = simulate_margin(model_margin_home, SIGMA, N, seed=game.game_id)
     home_win, push, home_loss = cover_probabilities(margins, home_line)
@@ -249,7 +259,7 @@ def _evaluate_game(conn, game: GameForDate, game_date: date_type, evaluated_at: 
             evi_value=chosen_evi, kelly_full_value=kelly_full_value,
             kelly_fractional_value=decision.kelly_pct,  # post gate.py cap
             home_features=home_features, away_features=away_features,
-            extra_flags=_with_known_qb_flags(game, decision.flags), line_signal=line_signal,
+            hfa=hfa, extra_flags=_with_known_qb_flags(game, _neutral_flags(neutral, decision.flags)), line_signal=line_signal,
         )
         result = upsert_pick(conn, snap, model_run_id, dry_run)
         return {**asdict(snap), **result}, "published"
@@ -258,7 +268,7 @@ def _evaluate_game(conn, game: GameForDate, game_date: date_type, evaluated_at: 
             game=game, game_date=game_date, logged_at=evaluated_at,
             bet_team=bet_team, spread=spread, odds=price,
             status=decision.status, skip_reason=decision.skip_reason,
-            extra_flags=_with_known_qb_flags(game, decision.flags),
+            extra_flags=_with_known_qb_flags(game, _neutral_flags(neutral, decision.flags)),
         )
         result = upsert_pick(conn, snap, model_run_id, dry_run)
         return {**asdict(snap), **result}, "skipped"

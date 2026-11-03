@@ -63,3 +63,11 @@ the writes would succeed without keeping them.
 - **Odds API credits:** the free plan has 500 a month. The historical-odds endpoints need a paid plan.
 - **A pick shows as locked:** the game has started. That is the intended behavior.
 - **Ratings look stale:** run the team-features ingest (see Weekly routine).
+
+## Neutral-site games (international / neutral venues)
+
+The model gives the home team no home-field advantage (HFA = 0) when a game is played at a neutral site.
+Neutral games are listed per season in `NEUTRAL_SITE_GAMES` in `gg/season.py`, as `(home, away)` in database
+abbreviations (the "home" team is the schedule's designated home team). Add the entries when the schedule is
+released; nflverse marks these games `location == "Neutral"`. Published picks carry the flag `NEUTRAL_SITE_NO_HFA`,
+and the pick snapshot shows `hfa = 0`. Picks are frozen at kickoff, so a game added late only affects games not yet started.

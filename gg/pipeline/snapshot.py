@@ -123,10 +123,11 @@ def build_published_snapshot(
     away_features: TeamFeatures,
     extra_flags: tuple[str, ...] = (),
     line_signal: dict | None = None,
+    hfa: float = HFA,
 ) -> PickSnapshot:
     """The full-evaluation path: both teams had features, odds existed,
     and gate.py returned status='published'."""
-    hfa_signed = HFA if bet_team_is_home else -HFA
+    hfa_signed = hfa if bet_team_is_home else -hfa
     edge_pts = (bet_rating - opp_rating) + hfa_signed
 
     return PickSnapshot(
@@ -157,7 +158,7 @@ def build_published_snapshot(
         },
         formulas=[
             "rating = CARRY*prior_season + (1-CARRY)*league_mean (K has no effect at gp=0)",
-            "edge_pts = (bet_team_rating - opp_rating) + HFA",
+            "edge_pts = (bet_team_rating - opp_rating) + HFA (HFA = 0 at neutral sites)",
             "margin ~ Normal(edge_pts, SIGMA), N simulations",
             "cover_probabilities(margins, spread) -> win, push, loss",
             "evi = p_win*american_to_profit(odds) - p_loss",
